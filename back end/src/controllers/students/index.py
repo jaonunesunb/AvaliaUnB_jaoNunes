@@ -1,9 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, make_response, Response
+from src.middlewares.index import authenticate_token, check_admin
 from src.services.students.index import create_user, edit_user, get_users, get_user_by_id, delete_user, convert_image_to_base64, login
 
 users_blueprint = Blueprint('users', __name__)
 
-@users_blueprint.route('/users', methods=['POST'])
+@users_blueprint.route('/users/register', methods=['POST'])
 def create_user_controller():
     data = request.get_json()
     
@@ -13,30 +14,41 @@ def create_user_controller():
     foto_binario = convert_image_to_base64(image_path)
 
     # Chama a função create_user() com os dados atualizados
-    create_user(data["nome"], data["email"], data["senha"], data["matricula"], data["curso"], foto_binario, data["is_adm"])
+    user = create_user(data["nome"], data["email"], data["senha"], data["matricula"], data["curso"], foto_binario, data["is_adm"])
     
-    return jsonify({"message": "Usuário criado com sucesso"}), 201
+    return jsonify(user), 201
 
-@users_blueprint.route('/users/<int:user_id>', methods=['PUT'])
+@users_blueprint.route('/users/<int:user_id>', methods=['PATCH'])
+@authenticate_token
 def edit_user_controller(user_id):
     data = request.json
-    edit_user(user_id, data['nome'], data['email'], data['senha'], data['curso'])
-    return jsonify('User updated successfully')
+    image_path = data["foto"]
+    
+    foto_binario = convert_image_to_base64(image_path)
+    
+    user = edit_user(user_id, data['nome'], data['email'], data['senha'], data['curso'], foto_binario)
+    return jsonify(user)
 
 @users_blueprint.route('/users', methods=['GET'])
+@authenticate_token
 def get_users_controller():
     users = get_users()
     return jsonify(users)
 
 @users_blueprint.route('/users/<int:user_id>', methods=['GET'])
+@authenticate_token
 def get_user_by_id_controller(user_id):
     user = get_user_by_id(user_id)
-    return jsonify(user)
+    if user:
+        return jsonify(user)
+    else:
+        return jsonify({"message": "Usuário não encontrado"}), 404
 
 @users_blueprint.route('/users/<int:user_id>', methods=['DELETE'])
+@authenticate_token
 def delete_user_controller(user_id):
     delete_user(user_id)
-    return jsonify({'message': 'User deleted successfully'})
+    return jsonify({'message': 'Usuário excluído com sucesso'})
 
 @users_blueprint.route('/users/login', methods=['POST'])
 def login_controller():
@@ -44,9 +56,5 @@ def login_controller():
     email = data['email']
     senha = data['senha']
 
-    token = login(email, senha)
+    return login(email, senha)
 
-    if token:
-        return jsonify({'token': token}), 200
-    else:
-        return jsonify({'message': 'Falha na autenticação'}), 401

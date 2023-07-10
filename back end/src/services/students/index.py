@@ -1,5 +1,7 @@
+from flask import make_response, jsonify
+import os
 from src.db_connection.connection import get_db_connection
-import jwt as pyjwt
+import jwt
 import base64
 import datetime
 from dotenv import dotenv_values
@@ -13,12 +15,26 @@ def create_user(nome, email, senha, matricula, curso, foto, is_adm=False):
     insert_query = '''
         INSERT INTO Estudantes (nome, email, senha, matricula, curso, foto, is_adm)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
+        RETURNING id, nome, email, matricula, curso, is_adm
     '''
     cursor.execute(insert_query, (nome, email, senha, matricula, curso, foto, is_adm))
     conn.commit()
 
+    user = cursor.fetchone() 
+    user_dict = {
+        'id': user[0],
+        'nome': user[1],
+        'email': user[2],
+        'matricula': user[3],
+        'curso': user[4],
+        'is_adm': user[5],
+        'foto': base64.b64encode(foto.encode('utf-8')).decode('utf-8') if foto else None
+    }
+
     cursor.close()
     conn.close()
+
+    return user_dict
     
 def edit_user(user_id, nome=None, email=None, senha=None, curso=None, foto=None, is_adm=None):
     conn = get_db_connection()
@@ -45,6 +61,7 @@ def edit_user(user_id, nome=None, email=None, senha=None, curso=None, foto=None,
         UPDATE Estudantes
         SET {set_clause}
         WHERE id = %s
+        RETURNING id, nome, email, matricula, curso, foto, is_adm
     '''
 
     update_values.append(('user_id', user_id))
@@ -53,23 +70,50 @@ def edit_user(user_id, nome=None, email=None, senha=None, curso=None, foto=None,
     cursor.execute(update_query, update_values)
     conn.commit()
 
+    user = cursor.fetchone()
+    user_dict = {
+        'id': user[0],
+        'nome': user[1],
+        'email': user[2],
+        'matricula': user[3],
+        'curso': user[4],
+        'is_adm': user[6],
+        'foto': base64.b64encode(user[5]).decode('utf-8') if user[5] else None
+    }
+
     cursor.close()
     conn.close()
+
+    return user_dict
+
 
 def get_users():
     conn = get_db_connection()
     cursor = conn.cursor()
 
     select_query = '''
-        SELECT * FROM Estudantes
+        SELECT id, nome, email, matricula, curso, is_adm, foto FROM Estudantes
     '''
     cursor.execute(select_query)
     users = cursor.fetchall()
 
+    user_list = []
+    for user in users:
+        user_dict = {
+            'id': user[0],
+            'nome': user[1],
+            'email': user[2],
+            'matricula': user[3],
+            'curso': user[4],
+            'is_adm': user[5],
+            'foto': base64.b64encode(user[6]).decode('utf-8') if user[6] else None
+        }
+        user_list.append(user_dict)
+
     cursor.close()
     conn.close()
 
-    return users
+    return user_list
 
 def get_user_by_id(user_id):
     conn = get_db_connection()
@@ -113,26 +157,37 @@ def login(email, senha):
         user_id, stored_password = user
         if senha == stored_password:
             token = generate_token(user_id)
-            return token
+            response = make_response(jsonify({'message': 'Autenticação bem-sucedida', 'token': token}), 200)
+            response.headers['Authorization'] = f'Bearer {token}'
+            return response
 
-    return None
+    return jsonify({'message': 'Falha na autenticação'}), 401
 
 def generate_token(user_id):
-    from flask import current_app
+    secret_key = os.getenv('SECRET_KEY') 
+    expiration_time = datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    # Obter a chave secreta da app
-    secret_key = current_app.secret_key
+    select_query = '''
+        SELECT * FROM Estudantes WHERE id = %s
+    '''
+    cursor.execute(select_query, (user_id,))
+    user = cursor.fetchone()
 
-    # Configurar payload do token
+    column_names = [desc[0] for desc in cursor.description]
+    user_dict = dict(zip(column_names, user))
+    is_adm = user_dict.get('is_adm') 
+
     payload = {
         'user_id': user_id,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)  # Token expira em 2 horas
+        'is_adm': is_adm,
+        'exp': expiration_time
     }
 
-    # Gerar token JWT
-    token = pyjwt.encode(payload, secret_key, algorithm='HS256')
-
+    token = jwt.encode(payload, secret_key, algorithm='HS256')
     return token
+
 
 def convert_image_to_base64(image_path):
     with open(image_path, "rb") as image_file:

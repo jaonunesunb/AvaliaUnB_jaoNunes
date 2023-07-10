@@ -1,46 +1,59 @@
-from urllib import request
-from dotenv import dotenv_values
-import jwt as pyjwt
-from flask import request, jsonify, current_app
-from src.db_connection.connection import get_db_connection
+from functools import wraps
+import os
+import jwt
+from flask import request, jsonify
 
-env_variables = dotenv_values()
+def authenticate_token(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        authorization_header = request.headers.get('Authorization')
+        secret_key = os.getenv('SECRET_KEY')
 
+        if not authorization_header:
+            return jsonify({'message': 'Token não fornecido'}), 401
 
-def ensure_admin_and_fields():
-    route = request.path
-    # Rotas que não requerem autenticação
-    excluded_routes = ['/users/login', '/users/register']
+        try:
+            token_type, token = authorization_header.split(' ')
+            if token_type != 'Bearer':
+                return jsonify({'message': 'Token inválido'}), 401
 
-    if route in excluded_routes:
-        return None
+            decoded_token = jwt.decode(token, secret_key, algorithms=['HS256'])
 
-    token = request.headers.get('Authorization')
+            return func(*args, **kwargs)
 
-    secret_key = current_app.secret_key
-    decoded_token = pyjwt.decode(token, secret_key, algorithms=['HS256'])
-    user_id = decoded_token.get('user_id')
-    if not user_id:
-        return jsonify({'message': 'Invalid token.'}), 401
+        except jwt.exceptions.ExpiredSignatureError:
+            return jsonify({'message': 'Token expirado'}), 401
+        except jwt.exceptions.InvalidTokenError:
+            return jsonify({'message': 'Token inválido'}), 401
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    return wrapper
 
-    select_query = "SELECT is_admin, email, password FROM Estudantes WHERE id = %s"
-    cursor.execute(select_query, (user_id,))
-    user = cursor.fetchone()
+def check_admin(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # Verificar se o usuário está autenticado
+        authorization_header = request.headers.get('Authorization')
+        if not authorization_header:
+            return jsonify({'message': 'Token não fornecido'}), 401
 
-    if not user:
-        return jsonify({'message': 'User not found.'}), 409
-    
-    is_admin = user[0]
-    email = user[1]
-    password = user[2]
+        try:
+            token_type, token = authorization_header.split(' ')
+            if token_type != 'Bearer':
+                return jsonify({'message': 'Token inválido'}), 401
 
-    if not is_admin or not email or not password:
-        return jsonify({'message': 'Insufficient permissions.'}), 403
+            secret_key = os.getenv('SECRET_KEY')
+            decoded_token = jwt.decode(token, secret_key, algorithms=['HS256'])
 
-    cursor.close()
-    conn.close()
+            # Verificar se o usuário é um administrador
+            is_admin = decoded_token.get('is_adm')
+            if not is_admin:
+                return jsonify({'message': 'Acesso negado. Este recurso requer privilégios de administrador.'}), 403
 
-    return None
+            return func(*args, **kwargs)
+
+        except jwt.exceptions.ExpiredSignatureError:
+            return jsonify({'message': 'Token expirado'}), 401
+        except jwt.exceptions.InvalidTokenError:
+            return jsonify({'message': 'Token inválido'}), 401
+
+    return wrapper
