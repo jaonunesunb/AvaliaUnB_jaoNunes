@@ -1,17 +1,30 @@
 from src.db_connection.connection import get_db_connection
 
+from src.db_connection.connection import get_db_connection
+
 def create_professor(nome, departamento):
     conn = get_db_connection()
     cursor = conn.cursor()
-    insert_query = "INSERT INTO Professores (nome, departamento) VALUES (%s, %s) RETURNING id, nome, departamento"
+
+    select_departamento_query = "SELECT id FROM Departamentos WHERE id = %s"
+    cursor.execute(select_departamento_query, (departamento,))
+    departamento_exists = cursor.fetchone()
+
+    if not departamento_exists:
+        cursor.close()
+        conn.close()
+        return None  
+
+    insert_query = "INSERT INTO Professores (nome, departamento_id) VALUES (%s, %s) RETURNING id, nome, departamento_id"
     cursor.execute(insert_query, (nome, departamento))
-    conn.commit()
     professor = cursor.fetchone()
+
+    conn.commit()
     cursor.close()
     conn.close()
+
     return professor
 
-# Service de leitura de professor por ID
 def get_professor_by_id(professor_id):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -22,7 +35,6 @@ def get_professor_by_id(professor_id):
     conn.close()
     return professor
 
-# Service de leitura de todos os professores
 def get_all_professores():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -37,6 +49,17 @@ def update_professor(professor_id, nome=None, departamento=None):
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    if departamento is not None:
+        
+        select_departamento_query = "SELECT id FROM Departamentos WHERE id = %s"
+        cursor.execute(select_departamento_query, (departamento,))
+        departamento_exists = cursor.fetchone()
+
+        if not departamento_exists:
+            cursor.close()
+            conn.close()
+            return None  
+
     update_query = "UPDATE Professores SET"
     update_values = []
 
@@ -45,7 +68,7 @@ def update_professor(professor_id, nome=None, departamento=None):
         update_values.append(nome)
 
     if departamento is not None:
-        update_query += " departamento = %s,"
+        update_query += " departamento_id = %s,"
         update_values.append(departamento)
 
     update_query = update_query.rstrip(',')
@@ -66,7 +89,6 @@ def update_professor(professor_id, nome=None, departamento=None):
     return updated_professor
 
 
-# Service de exclusão de professor
 def delete_professor(professor_id):
     conn = get_db_connection()
     cursor = conn.cursor()
