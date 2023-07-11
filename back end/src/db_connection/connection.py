@@ -73,7 +73,7 @@ def create_tables():
             id SERIAL PRIMARY KEY,
             turma TEXT NOT NULL,
             periodo TEXT NOT NULL,
-            professor TEXT NOT NULL,
+            professor_id INTEGER REFERENCES Professores (id),
             horario TEXT NOT NULL,
             vagas_ocupadas INTEGER NOT NULL,
             total_vagas INTEGER NOT NULL,
@@ -110,3 +110,33 @@ def create_tables():
 
     cursor.close()
     conn.close()
+
+def execute_query(query, args=None):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if args:
+        cursor.execute(query, args)
+    else:
+        cursor.execute(query)
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+def execute_query_with_result(query, args=None):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if args:
+        cursor.execute(query, args)
+    else:
+        cursor.execute(query)
+
+    result = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return result

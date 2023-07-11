@@ -1,6 +1,18 @@
 import csv
+import re
 from src.db_connection.connection import get_db_connection
 from src.services.students.index import convert_image_to_base64
+
+def extract_professor_name(professor):
+    pattern = r"^(.*?),?\s*\d+h?$"  # Expressão regular para extrair o nome do professor
+    match = re.search(pattern, professor)
+    if match:
+        professor_name = match.group(1)
+        return professor_name.strip()
+    else:
+        return None
+
+# Restante do código...
 
 def insert_departments():
     conn = get_db_connection()
@@ -59,35 +71,95 @@ def insert_disciplines():
     cursor.close()
     conn.close()
 
+def insert_professors():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    with open('src/CSVs/turmas_atualizado.csv', 'r', encoding='utf-8') as file:
+        csv_data = csv.reader(file)
+        next(csv_data)
+
+        professors_data = set()  # Usando um conjunto para evitar duplicatas
+
+        for row in csv_data:
+            professor = row[2].strip()  # Remove espaços em branco do início e do final do nome
+            department_id = int(row[8])
+
+            professor_name = extract_professor_name(professor)
+            if professor_name:
+                professors_data.add((professor_name, department_id))
+
+        for professor_data in professors_data:
+            professor, department_id = professor_data
+
+            # Verifica se o professor já existe na tabela
+            select_query = '''
+                SELECT nome FROM Professores WHERE nome = %s
+            '''
+            cursor.execute(select_query, (professor,))
+            existing_professor = cursor.fetchone()
+
+            if existing_professor:
+                # Professor já existe, faça o tratamento adequado
+                print(f'O professor {professor} já existe.')
+            else:
+                # Professor não existe, faça a inserção
+                insert_query = '''
+                    INSERT INTO Professores (nome, departamento_id)
+                    VALUES (%s, %s)
+                '''
+                cursor.execute(insert_query, (professor, department_id))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
 def insert_classes():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    with open('src/CSVs/turmas_2022-1.csv', 'r', encoding='utf-8') as file:
+    with open('src/CSVs/turmas_atualizado.csv', 'r', encoding='utf-8') as file:
         csv_data = csv.reader(file)
         next(csv_data)  # Pula o cabeçalho do CSV
 
         for row in csv_data:
             class_name = row[0]
             period = row[1]
-            professor = row[2]
+            professor_name = row[2]
             schedule = row[3]
             occupied_seats = int(row[4])
-            total_seats = int(row[5]) if row[5] else 0  # Verifica se o campo não está vazio
+            total_seats = int(row[5]) if row[5] else 0  
             location = row[6]
             discipline_id = row[7]
             department_id = int(row[8])
 
-            insert_query = '''
-                INSERT INTO Turmas (turma, periodo, professor, horario, vagas_ocupadas, total_vagas, local, cod_disciplina, cod_depto)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            '''
-            cursor.execute(insert_query, (class_name, period, professor, schedule, occupied_seats, total_seats, location, discipline_id, department_id))
+            professor_name = extract_professor_name(professor_name)
+            if professor_name:
+                # Verifica se o professor já existe na tabela
+                select_query = '''
+                    SELECT id FROM Professores WHERE nome = %s
+                '''
+                cursor.execute(select_query, (professor_name,))
+                professor_id = cursor.fetchone()
+
+                if professor_id:
+                    # Professor existe, faça a inserção na tabela Turmas
+                    insert_query = '''
+                        INSERT INTO Turmas (turma, periodo, professor_id, horario, vagas_ocupadas, total_vagas, local, cod_disciplina, cod_depto)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    '''
+                    cursor.execute(insert_query, (class_name, period, professor_id[0], schedule, occupied_seats, total_seats, location, discipline_id, department_id))
+                else:
+                    # Professor não existe, faça o tratamento adequado
+                    print(f'O professor {professor_name} não foi encontrado.')
+            else:
+                # Nome do professor inválido, faça o tratamento adequado
+                print(f'O nome do professor "{professor_name}" é inválido.')
 
     conn.commit()
     cursor.close()
     conn.close()
-
+    
 def insert_students():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -112,30 +184,7 @@ def insert_students():
 
     conn.commit()
     cursor.close()
-    conn.close()
-    
-def insert_professors():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-
-    # Inserção de professores
-    professors_data = [
-        ('Joana Pereira da Silva', 473),
-        ('Carlos Silvio Santos', 674),
-        ('Mariana Santos da Silva', 518)
-    ]
-
-    for professor in professors_data:
-        insert_query = '''
-            INSERT INTO Professores (nome, departamento_id)
-            VALUES (%s, %s)
-        '''
-        cursor.execute(insert_query, professor)
-
-    conn.commit()
-    cursor.close()
-    conn.close()
+    conn.close()    
 
 def insert_evaluations():
     conn = get_db_connection()
@@ -153,11 +202,23 @@ def insert_evaluations():
     for evaluation in evaluations_data:
         id_estudante, id_turma, nota, comentario = evaluation
 
-        insert_query = '''
-            INSERT INTO Avaliacoes (id_estudante, id_turma, nota, comentario)
-            VALUES (%s, %s, %s, %s)
+        # Verifica se a turma existe
+        select_query = '''
+            SELECT id FROM Turmas WHERE id = %s
         '''
-        cursor.execute(insert_query, (id_estudante, id_turma, nota, comentario))
+        cursor.execute(select_query, (id_turma,))
+        existing_turma = cursor.fetchone()
+
+        if existing_turma:
+            # Turma existe, faça a inserção na tabela Avaliacoes
+            insert_query = '''
+                INSERT INTO Avaliacoes (id_estudante, id_turma, nota, comentario)
+                VALUES (%s, %s, %s, %s)
+            '''
+            cursor.execute(insert_query, (id_estudante, id_turma, nota, comentario))
+        else:
+            # Turma não existe, faça o tratamento adequado
+            print(f'A turma com ID {id_turma} não foi encontrada.')
 
     conn.commit()
     cursor.close()
@@ -187,11 +248,10 @@ def insert_reports():
     conn.close()
 
 
-# Chamada das funções para inserção dos dados
 insert_departments()
 insert_disciplines()
+insert_professors()
 insert_classes()
 insert_students()
-insert_professors()
 insert_evaluations()
 insert_reports()

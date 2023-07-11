@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from middlewares.index import check_admin, authenticate_token
+from src.middlewares.index import check_admin, authenticate_token
 from src.services.classes.index import create_class, edit_class, get_classes, get_class_by_id, delete_class
 
 classes_blueprint = Blueprint('classes', __name__)
@@ -8,7 +8,7 @@ classes_blueprint = Blueprint('classes', __name__)
 @check_admin
 def create_class_controller():
     data = request.get_json()
-    
+
     turma = data["turma"]
     periodo = data["periodo"]
     professor = data["professor"]
@@ -19,27 +19,29 @@ def create_class_controller():
     cod_disciplina = data["cod_disciplina"]
     cod_depto = data["cod_depto"]
 
-    create_class(turma, periodo, professor, horario, vagas_ocupadas, total_vagas, local, cod_disciplina, cod_depto)
+    class_data = create_class(turma, periodo, professor, horario, vagas_ocupadas, total_vagas, local, cod_disciplina, cod_depto)
     
-    return jsonify({"message": "Turma criada com sucesso"}), 201
+    return jsonify(class_data), 201
 
 @classes_blueprint.route('/classes/<int:class_id>', methods=['PATCH'])
 @check_admin
 def edit_class_controller(class_id):
     data = request.json
-    turma = data["turma"]
-    periodo = data["periodo"]
-    professor = data["professor"]
-    horario = data["horario"]
-    vagas_ocupadas = data["vagas_ocupadas"]
-    total_vagas = data["total_vagas"]
-    local = data["local"]
-    cod_disciplina = data["cod_disciplina"]
-    cod_depto = data["cod_depto"]
 
-    edit_class(class_id, turma, periodo, professor, horario, vagas_ocupadas, total_vagas, local, cod_disciplina, cod_depto)
+    turma = data.get("turma")
+    periodo = data.get("periodo")
+    professor = data.get("professor")
+    horario = data.get("horario")
+    vagas_ocupadas = data.get("vagas_ocupadas")
+    total_vagas = data.get("total_vagas")
+    local = data.get("local")
+    cod_disciplina = data.get("cod_disciplina")
+    cod_depto = data.get("cod_depto")
+
+    class_data = edit_class(class_id, turma, periodo, professor, horario, vagas_ocupadas, total_vagas, local, cod_disciplina, cod_depto)
     
-    return jsonify('Turma atualizada com sucesso')
+    return jsonify(class_data)
+
 
 @classes_blueprint.route('/classes', methods=['GET'])
 @authenticate_token
