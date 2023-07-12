@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, make_response, Response
 from src.middlewares.index import authenticate_token, check_admin
-from src.services.students.index import create_user, edit_user, get_users, get_user_by_id, delete_user, convert_image_to_base64, login
+from src.services.students.index import create_user, edit_user, get_user_by_email, get_users, get_user_by_id, delete_user, convert_image_to_base64, login
 
 users_blueprint = Blueprint('users', __name__)
 
@@ -9,11 +9,7 @@ def create_user_controller():
     data = request.get_json()
     
     image_path = data["foto"]
-
-    # Converte a imagem para base64
     foto_binario = convert_image_to_base64(image_path)
-
-    # Chama a função create_user() com os dados atualizados
     user = create_user(data["nome"], data["email"], data["senha"], data["matricula"], data["curso"], foto_binario, data["is_adm"])
     
     return jsonify(user), 201
@@ -39,8 +35,19 @@ def get_users_controller():
 @authenticate_token
 def get_user_by_id_controller(user_id):
     user = get_user_by_id(user_id)
+
     if user:
-        return jsonify(user)
+        return jsonify(user), 200
+    else:
+        return jsonify({"message": "Usuário não encontrado"}), 404
+    
+@users_blueprint.route('/users/<string:email>', methods=['GET'])
+@authenticate_token
+def get_user_by_email_controller(email):
+    user = get_user_by_email(email)
+
+    if user:
+        return jsonify(user), 200
     else:
         return jsonify({"message": "Usuário não encontrado"}), 404
 
