@@ -8,6 +8,7 @@ from dotenv import dotenv_values
 
 env_variables = dotenv_values()
 
+
 def create_user(nome, email, senha, matricula, curso, foto, is_adm=False):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -35,6 +36,34 @@ def create_user(nome, email, senha, matricula, curso, foto, is_adm=False):
     conn.close()
 
     return user_dict
+
+def get_user_by_email(email):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    select_query = '''
+        SELECT * FROM Estudantes WHERE email = %s
+    '''
+    cursor.execute(select_query, (email,))
+    user = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if user:
+        user_dict = {
+            'id': user[0],
+            'nome': user[1],
+            'email': user[2],
+            'matricula': user[3],
+            'curso': user[4],
+            'is_adm': user[5],
+            'foto': base64.b64encode(user[6].encode('utf-8')).decode('utf-8') if user[6] else None
+        }
+        return user_dict
+    else:
+        return None
+
     
 def edit_user(user_id, nome=None, email=None, senha=None, curso=None, foto=None, is_adm=None):
     conn = get_db_connection()
@@ -107,13 +136,14 @@ def get_users():
             'curso': user[4],
             'is_adm': user[5],
             'foto': base64.b64encode(user[6]).decode('utf-8') if user[6] else None
-        }
+        }           
         user_list.append(user_dict)
 
     cursor.close()
     conn.close()
 
     return user_list
+
 
 def get_user_by_id(user_id):
     conn = get_db_connection()
@@ -128,7 +158,20 @@ def get_user_by_id(user_id):
     cursor.close()
     conn.close()
 
-    return user
+    if user:
+        user_dict = {
+            'id': user[0],
+            'nome': user[1],
+            'email': user[2],
+            'matricula': user[3],
+            'curso': user[4],
+            'is_adm': user[5],
+            'foto': base64.b64encode(user[6].encode('utf-8')).decode('utf-8') if user[6] else None
+        }
+        return user_dict
+    else:
+        return None
+
 
 def delete_user(user_id):
     conn = get_db_connection()
@@ -187,7 +230,6 @@ def generate_token(user_id):
 
     token = jwt.encode(payload, secret_key, algorithm='HS256')
     return token
-
 
 def convert_image_to_base64(image_path):
     with open(image_path, "rb") as image_file:

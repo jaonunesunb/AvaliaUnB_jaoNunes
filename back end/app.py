@@ -10,9 +10,11 @@ from src.controllers.classes.index import classes_blueprint
 from src.controllers.departamentos.index import departamento_blueprint
 from views import create_views, views_bp
 from src.procedures.index import procedures_bp
+from flask_cors import CORS
 
 app = Flask(__name__)
 load_dotenv()
+CORS(app)
 
 app.config['DATABASE'] = {
     'dbname': os.getenv('DB_NAME'),
@@ -32,6 +34,7 @@ app.register_blueprint(classes_blueprint)
 app.register_blueprint(departamento_blueprint)
 app.register_blueprint(views_bp)
 app.register_blueprint(procedures_bp)
+
 
 if __name__ == '__main__':
     create_tables()
