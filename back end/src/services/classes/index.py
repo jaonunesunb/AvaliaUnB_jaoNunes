@@ -1,3 +1,5 @@
+from src.services.disciplines.index import get_disciplina_by_id
+from src.services.professors.index import get_professor_by_id
 from src.db_connection.connection import get_db_connection
 
 def create_class(turma, periodo, professor, horario, vagas_ocupadas, total_vagas, local, cod_disciplina, cod_depto):
@@ -76,7 +78,7 @@ def edit_class(class_id, turma=None, periodo=None, professor=None, horario=None,
     cursor.close()
     conn.close()
 
-    updated_class_data = get_class_by_id(class_id)  # Obter os dados atualizados da turma do banco de dados
+    updated_class_data = get_class_by_id(class_id) 
 
     return updated_class_data
 
@@ -118,20 +120,24 @@ def get_departamento_id_by_name(departamento_name):
         return None
 
 
-def get_classes():
+def get_classes(page, per_page):
     conn = get_db_connection()
     cursor = conn.cursor()
 
     select_query = '''
         SELECT * FROM Turmas
+        ORDER BY id
+        OFFSET %s LIMIT %s
     '''
-    cursor.execute(select_query)
+    offset = (page - 1) * per_page
+    cursor.execute(select_query, (offset, per_page))
     classes = cursor.fetchall()
 
     cursor.close()
     conn.close()
 
     return classes
+
 
 def get_class_by_id(class_id):
     conn = get_db_connection()
@@ -146,8 +152,22 @@ def get_class_by_id(class_id):
     cursor.close()
     conn.close()
 
-    return class_data
-
+    if class_data:
+        return {
+            'id': class_data[0],
+            'turma': class_data[1],
+            'periodo': class_data[2],
+            'disciplina': get_disciplina_by_id(class_data[8])[1],
+            'professor': get_professor_by_id(class_data[3])[1],
+            'horario': class_data[4],
+            'vagas_ocupadas': class_data[5],
+            'total_vagas': class_data[6],
+            'local': class_data[7],
+            'cod_disciplina': class_data[8],
+            'cod_depto': class_data[9]
+        }
+    else:
+        return None
 def delete_class(class_id):
     conn = get_db_connection()
     cursor = conn.cursor()

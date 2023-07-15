@@ -206,6 +206,7 @@ def login(email, senha):
 
     return jsonify({'message': 'Falha na autenticação'}), 401
 
+
 def generate_token(user_id):
     secret_key = os.getenv('SECRET_KEY') 
     expiration_time = datetime.datetime.utcnow() + datetime.timedelta(hours=2)

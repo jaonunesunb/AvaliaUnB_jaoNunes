@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      Detalhes da Turma - Sistema de Avaliação de Disciplinas e Professores
+    </title>
+    <style>
+      /* Estilos CSS personalizados */
+      .navbar {
+        background-color: #333;
+        color: #fff;
+        padding: 10px;
+      }
+
+      .navbar a {
+        color: #fff;
+        text-decoration: none;
+        margin-right: 10px;
+      }
+
+      .details {
+        margin-top: 20px;
+      }
+
+      .comments {
+        margin-top: 20px;
+      }
+
+      .comment {
+        margin-bottom: 10px;
+      }
+
+      .comment textarea {
+        width: 100%;
+        height: 80px;
+      }
+
+      .actions {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <a href="/">Home</a>
+      <a href="/turmas">Turmas</a>
+    </div>
+
+    <h1>Detalhes da Turma</h1>
+
+    <div class="details">
+      <h2>Turma: {{ turma['turma'] }}</h2>
+      <p>Disciplina: {{ turma['disciplina'] }}</p>
+      <p>Professor: {{ turma['professor'] }}</p>
+      <p>Horário: {{ turma['horario'] }}</p>
+      <p>Total de Vagas: {{ turma['total_vagas'] }}</p>
+      <p>Local: {{ turma['local'] }}</p>
+    </div>
+
+    <div class="comments">
+      <h2>Comentários</h2>
+      {% if avaliacoes %} {% for avaliacao in avaliacoes %}
+      <div class="comment">
+        <p>Avaliação: {{ avaliacao['comentario'] }}</p>
+        <p>Nota: {{ avaliacao['nota'] }}</p>
+        {% if avaliacao['id_estudante'] == current_user['id'] or
+        current_user['is_admin'] %}
+        <button onclick="editAvaliacao({{ avaliacao['id'] }})">Editar</button>
+        <button onclick="deleteAvaliacao({{ avaliacao['id'] }})">
+          Deletar
+        </button>
+        {% else %}
+        <button onclick="denunciarAvaliacao({{ avaliacao['id'] }})">
+          Denunciar
+        </button>
+        {% endif %}
+      </div>
+      {% endfor %} {% else %}
+      <p>Ainda não há avaliações</p>
+      {% endif %}
+    </div>
+
+    <div class="actions">
+      <h2>Adicionar Comentário</h2>
+      <form
+        id="createAvaliacaoForm"
+        method="POST"
+        enctype="multipart/form-data"
+        onsubmit="createAvaliacao(event)"
+      >
+        <textarea
+          id="comentario"
+          name="comentario"
+          placeholder="Digite seu comentário"
+        ></textarea>
+        <br />
+        <input
+          type="number"
+          id="nota"
+          name="nota"
+          placeholder="Digite sua nota"
+        />
+        <br />
+        <input type="hidden" name="id_turma" value="{{ turma['id'] }}" />
+        <button type="submit">Enviar</button>
+      </form>
+    </div>
+
+    <script>
+      function createAvaliacao(event) {
+        event.preventDefault();
+
+        var form = document.getElementById("createAvaliacaoForm");
+        var formData = new FormData(form);
+
+        fetch("/avaliacoes", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw new Error("Erro ao criar avaliação");
+            }
+          })
+          .then((data) => {
+            console.log(data);
+            // Lógica para lidar com a resposta da criação de avaliação
+          })
+          .catch((error) => {
+            console.error("Erro:", error);
+          });
+      }
+
+      function editAvaliacao(avaliacaoId) {
+        var comentario = prompt("Digite o novo comentário:");
+        if (comentario !== null) {
+          var data = {
+            comentario: comentario,
+          };
+
+          fetch(`/avaliacoes/${avaliacaoId}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log(data);
+              // Lógica para atualizar a página com o comentário editado
+            })
+            .catch((error) => {
+              console.error("Erro:", error);
+            });
+        }
+      }
+
+      function deleteAvaliacao(avaliacaoId) {
+        if (confirm("Deseja realmente deletar esta avaliação?")) {
+          fetch(`/avaliacoes/${avaliacaoId}`, {
+            method: "DELETE",
+          })
+            .then((response) => {
+              if (response.ok) {
+                console.log("Avaliação deletada");
+              } else {
+                console.error("Erro ao deletar a avaliação");
+              }
+            })
+            .catch((error) => {
+              console.error("Erro:", error);
+            });
+        }
+      }
+
+      function denunciarAvaliacao(avaliacaoId) {
+        if (confirm("Deseja realmente denunciar esta avaliação?")) {
+          var motivo = prompt("Digite o motivo da denúncia:");
+          if (motivo !== null) {
+            var data = {
+              id_estudante: current_user["id"],
+              id_avaliacao: avaliacaoId,
+              motivo: motivo,
+            };
+
+            fetch("/reports", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                console.log(data);
+              })
+              .catch((error) => {
+                console.error("Erro:", error);
+              });
+          }
+        }
+      }
+    </script>
+  </body>
+</html>

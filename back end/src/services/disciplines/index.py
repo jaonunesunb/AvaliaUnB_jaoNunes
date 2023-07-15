@@ -1,4 +1,4 @@
-from db_connection.connection import get_db_connection
+from src.db_connection.connection import get_db_connection
 
 def create_disciplina(nome, departamento):
     conn = get_db_connection()
@@ -9,18 +9,20 @@ def create_disciplina(nome, departamento):
     cursor.close()
     conn.close()
 
-# Service de leitura de disciplina por ID
 def get_disciplina_by_id(disciplina_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    select_query = "SELECT * FROM Disciplinas WHERE id = %s"
+    select_query = "SELECT * FROM Disciplinas WHERE codigo = %s::text"
     cursor.execute(select_query, (disciplina_id,))
     disciplina = cursor.fetchone()
     cursor.close()
     conn.close()
-    return disciplina
+    if disciplina is None:
+        return None
+    else:
+        return disciplina
 
-# Service de leitura de todas as disciplinas
+
 def get_all_disciplinas():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -35,7 +37,7 @@ def get_all_disciplinas():
 def update_disciplina(disciplina_id, departamento):
     conn = get_db_connection()
     cursor = conn.cursor()
-    update_query = "UPDATE Disciplinas SET departamento = %s WHERE id = %s"
+    update_query = "UPDATE Disciplinas SET departamento = %s WHERE codigo = %s"
     cursor.execute(update_query, (departamento, disciplina_id))
     conn.commit()
     cursor.close()
@@ -45,7 +47,7 @@ def update_disciplina(disciplina_id, departamento):
 def delete_disciplina(disciplina_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    delete_query = "DELETE FROM Disciplinas WHERE id = %s"
+    delete_query = "DELETE FROM Disciplinas WHERE codigo = %s"
     cursor.execute(delete_query, (disciplina_id,))
     conn.commit()
     cursor.close()

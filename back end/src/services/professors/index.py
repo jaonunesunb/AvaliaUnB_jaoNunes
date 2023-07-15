@@ -29,7 +29,7 @@ def get_professor_by_id(professor_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     select_query = "SELECT * FROM Professores WHERE id = %s"
-    cursor.execute(select_query, (professor_id,))
+    cursor.execute(select_query, (professor_id,)) 
     professor = cursor.fetchone()
     cursor.close()
     conn.close()
