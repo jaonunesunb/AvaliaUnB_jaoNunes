@@ -5,7 +5,6 @@ from src.services.reports.index import create_denuncia, get_all_denuncias, get_d
 reports_bp = Blueprint("reports_bp", __name__, url_prefix="/denuncias")
 
 @reports_bp.route("", methods=["POST"])
-@check_admin
 def create_report():
     data = request.get_json()
     id_estudante = data.get("id_estudante")
@@ -20,13 +19,13 @@ def create_report():
         return jsonify({"message": "Dados inválidos"}), 400
 
 @reports_bp.route("", methods=["GET"])
-@check_admin
+#@check_admin
 def get_all_reports():
     reports = get_all_denuncias()
     return jsonify(reports)
 
 @reports_bp.route("/<int:report_id>", methods=["GET"])
-@check_admin
+#@check_admin
 def get_report_by_id(report_id):
     report = get_denuncia_by_id(report_id)
     if report:
@@ -35,13 +34,13 @@ def get_report_by_id(report_id):
         return jsonify({"message": "Relatório não encontrado"}), 404
 
 @reports_bp.route("/<int:report_id>", methods=["DELETE"])
-@check_admin
+#@check_admin
 def delete_report(report_id):
     delete_denuncia(report_id)
     return jsonify({"message": "Relatório excluído com sucesso"})
 
 @reports_bp.route("/<int:report_id>", methods=["PUT"])
-@check_admin
+#@check_admin
 def update_report(report_id):
     data = request.get_json()
     id_estudante = data.get("id_estudante")
