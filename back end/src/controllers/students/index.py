@@ -1,5 +1,6 @@
 import os
-from flask import Blueprint, request, jsonify, make_response
+from flask import Blueprint, request, jsonify, make_response, render_template
+from src.services.avaluations.index import get_avaliacoes_by_userID
 from src.middlewares.index import authenticate_token, check_admin
 from src.services.students.index import create_user, edit_user, get_user_by_email, get_users, get_user_by_id, delete_user, convert_image_to_base64, login
 
@@ -44,6 +45,16 @@ def edit_user_controller(user_id):
 def get_users_controller():
     users = get_users()
     return jsonify(users)
+
+@users_blueprint.route('/users/<int:user_id>')
+def user_profile(user_id):
+    user = get_user_by_id(user_id)
+    if not user:
+        return jsonify({'message': 'Usuário não encontrado'}), 404
+
+    avaliacoes = get_avaliacoes_by_userID(user_id)
+
+    return render_template('userPage.html', user=user, avaliacoes=avaliacoes)
 
 @users_blueprint.route('/users/<int:user_id>', methods=['GET'])
 def get_user_by_id_controller(user_id):

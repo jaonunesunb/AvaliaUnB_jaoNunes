@@ -180,3 +180,6 @@ def delete_class(class_id):
 
     cursor.close()
     conn.close()
+    
+
+

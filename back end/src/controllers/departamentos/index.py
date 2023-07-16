@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from src.middlewares.index import check_admin, authenticate_token
 from src.services.departamentos.index import create_departamento, get_departamentos, get_departamento_by_id
 
@@ -14,11 +14,10 @@ def create_departamento_controller():
 
     return jsonify(departamento), 201
 
-@departamento_blueprint.route('/departamentos', methods=['GET'])
-#@authenticate_token
-def get_departamentos_controller():
+@departamento_blueprint.route('/departaments', methods=['GET'])
+def view_departamentos():
     departamentos = get_departamentos()
-    return jsonify(departamentos)
+    return render_template('departamentosPage.html', departamentos=departamentos)
 
 @departamento_blueprint.route('/departamentos/<int:departamento_id>', methods=['GET'])
 #@authenticate_token
@@ -29,3 +28,7 @@ def get_departamento_by_id_controller(departamento_id):
     else:
         return jsonify({'message': 'Departamento não encontrado'}), 404
 
+@departamento_blueprint.route('/departamentos', methods=['GET'])
+def view_departamentos_controller():
+    departamentos = get_departamentos()
+    return render_template('departamentosPage.html', departamentos=departamentos)

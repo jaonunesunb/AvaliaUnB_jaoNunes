@@ -1,6 +1,8 @@
-from flask import make_response, jsonify
+from flask import g, make_response, jsonify
 import os
+import re
 from src.db_connection.connection import get_db_connection
+from flask_login import current_user 
 import jwt
 import base64
 import datetime
@@ -8,8 +10,10 @@ from dotenv import dotenv_values
 
 env_variables = dotenv_values()
 
-
 def create_user(nome, email, senha, matricula, curso, foto, is_adm=False):
+    if not re.match(r'^\d{9}@aluno.unb.br$', email):
+        return None
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -36,6 +40,7 @@ def create_user(nome, email, senha, matricula, curso, foto, is_adm=False):
     conn.close()
 
     return user_dict
+
 
 def get_user_by_email(email):
     conn = get_db_connection()
@@ -163,8 +168,8 @@ def get_user_by_id(user_id):
             'id': user[0],
             'nome': user[1],
             'email': user[2],
-            'matricula': user[3],
-            'curso': user[4],
+            'matricula': user[4],
+            'curso': user[6],
             'is_adm': user[5],
             'foto': base64.b64encode(user[6].encode('utf-8')).decode('utf-8') if user[6] else None
         }
@@ -191,21 +196,28 @@ def login(email, senha):
     cursor = conn.cursor()
 
     select_query = '''
-        SELECT id, senha FROM Estudantes WHERE email = %s
+        SELECT id, senha, is_adm FROM Estudantes WHERE email = %s
     '''
     cursor.execute(select_query, (email,))
     user = cursor.fetchone()
 
     if user:
-        user_id, stored_password = user
+        user_id, stored_password, is_adm = user
         if senha == stored_password:
             token = generate_token(user_id)
-            response = make_response(jsonify({'message': 'Autenticação bem-sucedida', 'token': token}), 200)
-            response.headers['Authorization'] = f'Bearer {token}'
+            g.token = token  
+            g.is_adm = is_adm
+            response_data = {'message': 'Autenticação bem-sucedida', 'token': token}
+            response = make_response(jsonify(response_data), 200)
+            response.set_cookie('token', token, httponly=True)
+            current_user.id = user_id
+            current_user.is_adm = is_adm
+
             return response
-
-    return jsonify({'message': 'Falha na autenticação'}), 401
-
+        else:
+            return jsonify({'message': 'E-mail ou Senha incorretos'}), 401
+    else:
+        return jsonify({'message': 'Usuário não encontrado'}), 401
 
 def generate_token(user_id):
     secret_key = os.getenv('SECRET_KEY') 
@@ -221,14 +233,12 @@ def generate_token(user_id):
 
     column_names = [desc[0] for desc in cursor.description]
     user_dict = dict(zip(column_names, user))
-    is_adm = user_dict.get('is_adm') 
-
+    is_admin = user_dict.get('is_admin')
     payload = {
         'user_id': user_id,
-        'is_adm': is_adm,
+        'is_admin': is_admin,
         'exp': expiration_time
     }
-
     token = jwt.encode(payload, secret_key, algorithm='HS256')
     return token
 

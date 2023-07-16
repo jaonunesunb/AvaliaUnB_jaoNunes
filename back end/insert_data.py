@@ -159,9 +159,9 @@ def insert_students():
     cursor = conn.cursor()
 
     students_data = [
-        ('João', 'joao@example.com', 'senha123', '202100001', 'Biblioteconomia', 'src/assets/joao_photo.jpg', False),
-        ('Maria', 'maria@example.com', 'senha456', '202100002', 'Direito', 'src/assets/maria_photo.jpg', False),
-        ('Pedro', 'pedro@example.com', 'senha789', '202100003', 'Medicina', 'src/assets/pedro_photo.jpg', True)
+        ('João', '190001123@aluno.unb.br', 'senha123', '190001123', 'Biblioteconomia', 'src/assets/joao_photo.jpg', False),
+        ('Maria', '200001332@aluno.unb.br', 'senha456', '200001332', 'Direito', 'src/assets/maria_photo.jpg', False),
+        ('Pedro', '170105456@aluno.unb.br', 'senha789', '170105456', 'Medicina', 'src/assets/pedro_photo.jpg', True)
     ]
 
     for student in students_data:

@@ -44,6 +44,8 @@
     <div class="navbar">
       <a href="/">Home</a>
       <a href="/turmas">Turmas</a>
+      <a href="/professors">Professores</a>
+      <a href="/departamentos">Departamentos</a>
     </div>
 
     <h1>Detalhes da Turma</h1>
@@ -64,7 +66,7 @@
         <p>Avaliação: {{ avaliacao['comentario'] }}</p>
         <p>Nota: {{ avaliacao['nota'] }}</p>
         {% if avaliacao['id_estudante'] == current_user['id'] or
-        current_user['is_admin'] %}
+        current_user['is_adm'] %}
         <button onclick="editAvaliacao({{ avaliacao['id'] }})">Editar</button>
         <button onclick="deleteAvaliacao({{ avaliacao['id'] }})">
           Deletar
@@ -82,6 +84,7 @@
 
     <div class="actions">
       <h2>Adicionar Comentário</h2>
+      {% if current_user %}
       <form
         id="createAvaliacaoForm"
         method="POST"
@@ -102,8 +105,16 @@
         />
         <br />
         <input type="hidden" name="id_turma" value="{{ turma['id'] }}" />
+        <input
+          type="hidden"
+          name="id_estudante"
+          value="{{ current_user['id'] }}"
+        />
         <button type="submit">Enviar</button>
       </form>
+      {% else %}
+      <p>Faça login para adicionar um comentário</p>
+      {% endif %}
     </div>
 
     <script>
@@ -113,24 +124,39 @@
         var form = document.getElementById("createAvaliacaoForm");
         var formData = new FormData(form);
 
-        fetch("/avaliacoes", {
-          method: "POST",
-          body: formData,
-        })
-          .then((response) => {
-            if (response.ok) {
-              return response.json();
-            } else {
-              throw new Error("Erro ao criar avaliação");
-            }
+        // Obter o token do local storage
+        var token = localStorage.getItem("token");
+        if (token) {
+          // Enviar o token no cabeçalho Authorization
+          var headers = {
+            Authorization: "Bearer " + token,
+          };
+
+          fetch("/avaliacoes", {
+            method: "POST",
+            body: formData,
+            headers: {
+              Authorization: "Bearer " + token,
+            },
           })
-          .then((data) => {
-            console.log(data);
-            // Lógica para lidar com a resposta da criação de avaliação
-          })
-          .catch((error) => {
-            console.error("Erro:", error);
-          });
+            .then((response) => {
+              console.log(response);
+              if (response.ok) {
+                return response.json();
+              } else {
+                throw new Error("Erro ao criar avaliação");
+              }
+            })
+            .then((data) => {
+              console.log(data);
+              // Lógica para lidar com a resposta da criação de avaliação
+            })
+            .catch((error) => {
+              console.error("Erro:", error);
+            });
+        } else {
+          console.log("Token não encontrado");
+        }
       }
 
       function editAvaliacao(avaliacaoId) {
@@ -142,9 +168,6 @@
 
           fetch(`/avaliacoes/${avaliacaoId}`, {
             method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
             body: JSON.stringify(data),
           })
             .then((response) => response.json())
@@ -188,9 +211,6 @@
 
             fetch("/reports", {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
               body: JSON.stringify(data),
             })
               .then((response) => response.json())

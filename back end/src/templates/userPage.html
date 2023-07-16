@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Perfil do Usuário</title>
+    <style>
+      .navbar {
+        background-color: #333;
+        color: #fff;
+        padding: 10px;
+      }
+
+      .navbar a {
+        color: #fff;
+        text-decoration: none;
+        margin-right: 10px;
+      }
+      .user-container {
+        display: flex;
+        align-items: center;
+      }
+
+      .user-image {
+        width: 200px;
+        margin-right: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <a href="/">Home</a>
+      <a href="/turmas">Turmas</a>
+      <a href="/professors">Professores</a>
+      <a href="/departamentos">Departamentos</a>
+    </div>
+    <h1>Perfil do Usuário</h1>
+    <div class="user-container">
+      {% if user.foto %}
+      <img
+        class="user-image"
+        src="data:image/jpeg;base64,{{ user.foto }}"
+        alt="Foto do Usuário"
+      />
+      {% endif %}
+      <div class="user-info">
+        <h2>Dados do Usuário</h2>
+        <p>Nome: {{ user.nome }}</p>
+        <p>Email: {{ user.email }}</p>
+        <p>Curso: {{ user.curso }}</p>
+        <p>Matrícula: {{ user.matricula }}</p>
+      </div>
+    </div>
+    <br />
+    <button onclick="deleteUser()">Deletar Conta</button>
+    <br />
+    <h2>Avaliações do Usuário</h2>
+    <div>
+      {% if avaliacoes %}
+      <ul>
+        {% for avaliacao in avaliacoes %}
+        <li>
+          Disciplina: {{ avaliacao['id_turma'] }} - Nota: {{ avaliacao['nota']
+          }}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>Nenhuma avaliação encontrada.</p>
+      {% endif %}
+    </div>
+    <br />
+    <h2>Status das Denúncias</h2>
+    <p>Quantidade de denúncias avaliadas:</p>
+
+    <script>
+      // Verificar token nas rotas protegidas
+    function verificarToken() {
+      var token = localStorage.getItem("token");
+      if (token) {
+        // Token presente, permitir acesso
+        // Faça o que for necessário para permitir a navegação ou o acesso à rota protegida
+      } else {
+        // Token ausente, redirecionar para página de login ou negar acesso
+        // Faça o que for necessário para redirecionar ou negar o acesso
+      }
+    }
+
+      function deleteUser() {
+        if (
+          confirm(
+            "Tem certeza de que deseja excluir sua conta? Essa ação não pode ser desfeita."
+          )
+        ) {
+          // Fazer a requisição para deletar a conta do usuário
+          fetch("/users/{{ user.id }}", {
+            method: "DELETE",
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              alert(data.message);
+              // Redirecionar para a página inicial após a exclusão da conta
+              window.location.href = "/";
+            })
+            .catch((error) => {
+              console.error("Erro:", error);
+            });
+        }
+      }
+    </script>
+  </body>
+</html>

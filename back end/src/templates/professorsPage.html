@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      Professores - Sistema de Avaliação de Disciplinas e Professores
+    </title>
+    <style>
+      .navbar {
+        background-color: #333;
+        color: #fff;
+        padding: 10px;
+      }
+
+      .navbar a {
+        color: #fff;
+        text-decoration: none;
+        margin-right: 10px;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+      }
+
+      th {
+        background-color: lightgray;
+      }
+
+      tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+
+      .pagination {
+        margin-top: 20px;
+      }
+
+      .pagination a {
+        display: inline-block;
+        padding: 8px;
+        text-decoration: none;
+        background-color: lightblue;
+        color: black;
+        margin-right: 5px;
+      }
+
+      .pagination .active {
+        background-color: gray;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <a href="/">Home</a>
+      <a href="/turmas">Turmas</a>
+      <a href="/professors">Professores</a>
+      <a href="/departamentos">Departamentos</a>
+    </div>
+    <h1>Professores</h1>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nome</th>
+          <th>Departamento</th>
+          {% if is_admin %}
+          <th>Ações</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for professor in professores %}
+        <tr>
+          <td>{{ professor.id }}</td>
+          <td>{{ professor.nome }}</td>
+          <td>{{ professor.departamento }}</td>
+          {% if is_admin %}
+          <td>
+            <button onclick="openEditModal({{ professor.id }})">Editar</button>
+            <button onclick="deleteProfessor({{ professor.id }})">
+              Deletar
+            </button>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if is_admin %}
+    <div id="editModal" style="display: none">
+      <h2>Editar Professor</h2>
+      <form id="editForm">
+        <label for="editNome">Nome:</label>
+        <input type="text" name="editNome" id="editNome" required /><br /><br />
+        <label for="editDepartamento">Departamento:</label>
+        <input
+          type="text"
+          name="editDepartamento"
+          id="editDepartamento"
+          required
+        /><br /><br />
+        <input type="submit" value="Salvar" />
+      </form>
+    </div>
+    {% endif %} {% if total_pages > 1 %}
+    <div class="pagination">
+      {% if previous_page %}
+      <a href="/professores?page={{ previous_page }}">Anterior</a>
+      {% endif %} {% for page in pages %} {% if page == current_page %}
+      <a href="/professores?page={{ page }}" class="active">{{ page }}</a>
+      {% else %}
+      <a href="/professores?page={{ page }}">{{ page }}</a>
+      {% endif %} {% endfor %} {% if next_page %}
+      <a href="/professores?page={{ next_page }}">Próxima</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <script>
+      function openEditModal(professorId) {
+        fetch(`/professores/${professorId}`)
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("editNome").value = data.nome;
+            document.getElementById("editDepartamento").value =
+              data.departamento_id;
+          })
+          .catch((error) => {
+            console.error("Erro ao obter os dados do professor:", error);
+          });
+
+        document.getElementById("editModal").style.display = "block";
+      }
+
+      function deleteProfessor(professorId) {
+        if (confirm("Deseja realmente deletar o professor?")) {
+          fetch(`/professores/${professorId}`, { method: "DELETE" })
+            .then((response) => {
+              if (response.ok) {
+                window.location.reload();
+              } else {
+                alert("Erro ao deletar o professor");
+              }
+            })
+            .catch((error) => {
+              console.error("Erro ao deletar o professor:", error);
+            });
+        }
+      }
+    </script>
+  </body>
+</html>

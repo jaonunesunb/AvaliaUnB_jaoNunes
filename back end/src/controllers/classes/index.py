@@ -1,3 +1,4 @@
+import math
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for
 from flask_login import current_user
 from src.services.avaluations.index import get_avaliacoes_by_turma_id
@@ -10,13 +11,12 @@ classes_blueprint = Blueprint('turmas', __name__)
 
 @classes_blueprint.route('/turmas', methods=['GET'])
 def get_classes_controller():
-    page = 1  
+    page = int(request.args.get('page', 1)) 
     per_page = 10  
-    class_data = get_classes(page, per_page)
+    class_data = get_classes(page, 50)  
     turmas = []
 
     for data in class_data:
-        print(data)
         disciplina_id = data[8]
         disciplina_obj = get_disciplina_by_id(disciplina_id)
         disciplina = disciplina_obj[1] if disciplina_obj else ''
@@ -33,11 +33,15 @@ def get_classes_controller():
             'cod_depto': data[9]
         }
         turmas.append(turma)
-    
-    return render_template('turmas.html', turmas=turmas)
+    total_turmas = 50  
+    total_pages = math.ceil(total_turmas / per_page)  
+
+    pages = range(1, total_pages + 1)  
+
+    return render_template('turmas.html', turmas=turmas, total_pages=total_pages, current_page=page, pages=pages)
 
 @classes_blueprint.route('/turmas/<int:class_id>', methods=['PATCH'])
-#@check_admin
+@check_admin
 def edit_class_controller(class_id):
     data = request.json
 
@@ -56,7 +60,7 @@ def edit_class_controller(class_id):
     return jsonify(class_data)
 
 @classes_blueprint.route('/turmas/<int:class_id>', methods=['DELETE'])
-#@check_admin
+@check_admin
 def delete_class_controller(class_id):
     delete_class(class_id)
     return jsonify({'message': 'Turma excluída com sucesso'})
@@ -75,3 +79,4 @@ def get_class_by_id_controller(class_id):
         return jsonify(class_data)
     else:
         return jsonify({'message': 'Turma não encontrada'}), 404
+

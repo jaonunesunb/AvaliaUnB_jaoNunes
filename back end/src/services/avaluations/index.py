@@ -111,6 +111,30 @@ def get_avaliacoes_by_turma_id(turma_id):
         }
         for avaliacao in avaliacoes
     ]
+    
+def get_avaliacoes_by_userID(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    select_query = '''
+        SELECT * FROM Avaliacoes WHERE id_estudante = %s;
+    '''
+    cursor.execute(select_query, (user_id,))
+    avaliacoes = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return [
+        {
+            'id': avaliacao[0],
+            'id_estudante': avaliacao[1],
+            'id_turma': avaliacao[2],
+            'nota': avaliacao[3],
+            'comentario': avaliacao[4]
+        }
+        for avaliacao in avaliacoes
+    ]
 
 def delete_avaliacao(avaliacao_id):
     conn = get_db_connection()

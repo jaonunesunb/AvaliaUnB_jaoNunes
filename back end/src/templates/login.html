@@ -1,16 +1,48 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Login - Sistema de Avaliação de Disciplinas e Professores</title>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Login</h1>
     <form method="POST" action="/users/login">
-        <label for="email">Email:</label>
-        <input type="email" name="email" id="email" required><br><br>
-        <label for="password">Senha:</label>
-        <input type="password" name="senha" id="senha" required><br><br>
-        <input type="submit" value="Login">
+      <label for="email">Email:</label>
+      <input type="email" name="email" id="email" required /><br /><br />
+      <label for="password">Senha:</label>
+      <input type="password" name="senha" id="senha" required /><br /><br />
+      <input type="submit" value="Login" />
     </form>
-</body>
+
+    <script>
+      document
+        .querySelector("form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          var email = document.getElementById("email").value;
+          var senha = document.getElementById("senha").value;
+
+          var formData = new FormData();
+          formData.append("email", email);
+          formData.append("senha", senha);
+          fetch("/users/login", {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.token) {
+                var token = data.token;
+                localStorage.setItem("token", token);
+                window.location.href = "/";
+              } else {
+                alert("Falha na autenticação");
+              }
+            })
+            .catch((error) => {
+              console.error("Erro:", error);
+            });
+        });
+    </script>
+  </body>
 </html>
