@@ -56,7 +56,7 @@ def view_professors():
     return render_template('professorsPage.html', **template_data)
 
 @professors_blueprint.route('/professores/<int:professor_id>', methods=['PUT'])
-#@check_admin
+@check_admin
 def update_professor_controller(professor_id):
     data = request.get_json()
     nome = data.get('nome')
@@ -70,7 +70,7 @@ def update_professor_controller(professor_id):
         return jsonify({'message': 'Erro ao atualizar professor'}), 500
 
 @professors_blueprint.route('/professores/<int:professor_id>', methods=['DELETE'])
-#@check_admin
+@check_admin
 def delete_professor_controller(professor_id):
     delete_professor(professor_id)
     return jsonify({'message': 'Professor deletado com sucesso'}), 200

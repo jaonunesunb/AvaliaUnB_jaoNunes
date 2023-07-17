@@ -63,7 +63,6 @@ def edit_user_controller(user_id):
     user = edit_user(user_id, nome, email, senha, curso, foto_data, user['is_adm'])
 
     if user is None:
-        # Nenhum campo fornecido para atualização
         return jsonify({'message': 'Nenhum campo fornecido para atualização.'}), 400
 
     return jsonify(user)

@@ -8,7 +8,6 @@ def create_views():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Criação da view TurmasMelhoresNotas
     create_view_turmas_melhores_notas_query = '''
         CREATE OR REPLACE VIEW TurmasMelhoresNotas AS
         SELECT Turmas.id, Turmas.turma, AVG(Avaliacoes.nota) AS media_notas
@@ -19,7 +18,6 @@ def create_views():
     '''
     cursor.execute(create_view_turmas_melhores_notas_query)
 
-    # Criação da view TurmasPioresNotas
     create_view_turmas_piores_notas_query = '''
         CREATE OR REPLACE VIEW TurmasPioresNotas AS
         SELECT Turmas.id, Turmas.turma, AVG(Avaliacoes.nota) AS media_notas
@@ -72,7 +70,7 @@ views_denuncias = Blueprint("views_denuncias", __name__, url_prefix="/views")
 def create_denuncias_views():
     conn = get_db_connection()
     cursor = conn.cursor()
-    # Criação da view DenunciasResolvidas
+
     create_view_denuncias_resolvidas_query = '''
         CREATE OR REPLACE VIEW DenunciasResolvidas AS
         SELECT Denuncias.id, Denuncias.motivo, Avaliacoes.comentario
@@ -82,7 +80,6 @@ def create_denuncias_views():
     '''
     cursor.execute(create_view_denuncias_resolvidas_query)
 
-    # Criação da view DenunciasNaoResolvidas
     create_view_denuncias_nao_resolvidas_query = '''
         CREATE OR REPLACE VIEW DenunciasNaoResolvidas AS
         SELECT Denuncias.id, Denuncias.motivo, Avaliacoes.comentario

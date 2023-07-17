@@ -33,7 +33,6 @@ def get_all_disciplinas():
     conn.close()
     return disciplinas
 
-# Service de atualização de disciplina
 def update_disciplina(disciplina_id, departamento):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -43,7 +42,6 @@ def update_disciplina(disciplina_id, departamento):
     cursor.close()
     conn.close()
 
-# Service de exclusão de disciplina
 def delete_disciplina(disciplina_id):
     conn = get_db_connection()
     cursor = conn.cursor()
