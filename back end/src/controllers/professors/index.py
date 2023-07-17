@@ -1,14 +1,14 @@
 import math
 from flask import Blueprint, g, jsonify, request, render_template
 from src.db_connection.connection import get_db_connection
-from src.middlewares.index import authenticate_token, check_admin
+from src.middlewares.index import check_admin
 from src.services.professors.index import create_professor, get_professor_by_id, get_all_professores, update_professor, delete_professor
 from src.services.departamentos.index import get_departamento_name
 
 professors_blueprint = Blueprint('professores', __name__)
 
 @professors_blueprint.route('/professores', methods=['POST'])
-#@check_admin
+@check_admin(True)
 def create_professor_controller():
     data = request.get_json()
     nome = data['nome']
@@ -55,7 +55,7 @@ def view_professors():
 
     return render_template('professorsPage.html', **template_data)
 
-@professors_blueprint.route('/professores/<int:professor_id>', methods=['PATCH'])
+@professors_blueprint.route('/professores/<int:professor_id>', methods=['PUT'])
 #@check_admin
 def update_professor_controller(professor_id):
     data = request.get_json()

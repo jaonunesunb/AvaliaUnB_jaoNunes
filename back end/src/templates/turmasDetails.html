@@ -124,56 +124,51 @@
         var form = document.getElementById("createAvaliacaoForm");
         var formData = new FormData(form);
 
-        // Obter o token do local storage
-        var token = localStorage.getItem("token");
-        if (token) {
-          // Enviar o token no cabeçalho Authorization
-          var headers = {
-            Authorization: "Bearer " + token,
-          };
+        var turmaId = document.querySelector('input[name="id_turma"]').value;
 
-          fetch("/avaliacoes", {
-            method: "POST",
-            body: formData,
-            headers: {
-              Authorization: "Bearer " + token,
-            },
+        formData.append("id_turma", turmaId);
+
+        fetch(`/avaliacoes/${turmaId}`, {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => {
+            console.log(response);
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw new Error("Erro ao criar avaliação");
+            }
           })
-            .then((response) => {
-              console.log(response);
-              if (response.ok) {
-                return response.json();
-              } else {
-                throw new Error("Erro ao criar avaliação");
-              }
-            })
-            .then((data) => {
-              console.log(data);
-              // Lógica para lidar com a resposta da criação de avaliação
-            })
-            .catch((error) => {
-              console.error("Erro:", error);
-            });
-        } else {
-          console.log("Token não encontrado");
-        }
+          .then((data) => {
+            console.log(data);
+            window.location.reload;
+          })
+          .catch((error) => {
+            console.error("Erro:", error);
+          });
       }
 
       function editAvaliacao(avaliacaoId) {
         var comentario = prompt("Digite o novo comentário:");
-        if (comentario !== null) {
+        var nota = prompt("Digite a nova nota:");
+        if (comentario !== null && nota !== null) {
           var data = {
             comentario: comentario,
+            nota: nota,
           };
 
           fetch(`/avaliacoes/${avaliacaoId}`, {
-            method: "PATCH",
+            method: "PUT",
             body: JSON.stringify(data),
+            headers: {
+              "Content-Type": "application/json",
+            },
           })
             .then((response) => response.json())
             .then((data) => {
               console.log(data);
-              // Lógica para atualizar a página com o comentário editado
+              window.location.reload;
             })
             .catch((error) => {
               console.error("Erro:", error);
@@ -204,14 +199,17 @@
           var motivo = prompt("Digite o motivo da denúncia:");
           if (motivo !== null) {
             var data = {
-              id_estudante: current_user["id"],
+              id_estudante: "{{ session['user_id'] }}",
               id_avaliacao: avaliacaoId,
               motivo: motivo,
             };
-
-            fetch("/reports", {
+      
+            fetch("/denuncias", {
               method: "POST",
               body: JSON.stringify(data),
+              headers: {
+                "Content-Type": "application/json",
+              },
             })
               .then((response) => response.json())
               .then((data) => {
@@ -222,7 +220,7 @@
               });
           }
         }
-      }
+      }      
     </script>
   </body>
 </html>

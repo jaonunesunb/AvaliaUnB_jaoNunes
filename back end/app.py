@@ -1,7 +1,6 @@
 import os
 from flask import Flask, render_template
 from flask_cors import CORS
-from flask_login import LoginManager
 from dotenv import load_dotenv
 from src.services.students.index import get_user_by_id
 from src.db_connection.connection import create_tables
@@ -19,8 +18,6 @@ from src.procedures.index import procedures_bp
 app = Flask(__name__)
 load_dotenv()
 CORS(app)
-login_manager = LoginManager(app)
-login_manager.init_app(app)
 
 app.config['DATABASE'] = {
     'dbname': os.getenv('DB_NAME'),
@@ -45,9 +42,6 @@ app.register_blueprint(disciplinas_blueprint)
 
 app.jinja_loader.searchpath.insert(0, os.path.join(os.path.dirname(__file__), 'src/templates'))
 
-@login_manager.user_loader
-def load_user(user_id):
-    return get_user_by_id(user_id)
 
 @app.route('/')
 def landing():

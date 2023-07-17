@@ -29,14 +29,11 @@
             method: "POST",
             body: formData,
           })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.token) {
-                var token = data.token;
-                localStorage.setItem("token", token);
-                window.location.href = "/";
+            .then((response) => {
+              if (response.ok) {
+                window.location.href = response.url;
               } else {
-                alert("Falha na autenticação");
+                throw new Error("Erro ao fazer login");
               }
             })
             .catch((error) => {

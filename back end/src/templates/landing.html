@@ -42,8 +42,17 @@
   <body>
     <div class="navbar">
       <ul>
+        {% if session.user_id %}
+        <li>
+          <a href="/users/{{ session.user_id }}"
+            >{{ session.nome }}</a
+          >
+        </li>
+        <li><a href="/logout">Logout</a></li>
+        {% else %}
         <li><a href="/users/register">Registre-se</a></li>
         <li><a href="/login">Login</a></li>
+        {% endif %}
       </ul>
       <ul>
         <li><a href="/turmas">Turmas</a></li>
