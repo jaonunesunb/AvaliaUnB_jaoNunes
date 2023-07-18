@@ -63,3 +63,14 @@ Acesse as diferentes rotas da aplicação para explorar as funcionalidades dispo
 - `/turmas`: Página de visualização das turmas disponíveis.
 - `/procedures/denuncias-nao-resolvidas`: Rota para obter a quantidade de denúncias não resolvidas.
 
+## Usuários 
+
+Algumas funcionalidades só podem ser acessadas por usuários administradores. Seguem os dados de login de um usuário não administrador e um administrador.
+
+### Usuário não Adm
+* 190001123@aluno.unb.br
+* senha123
+  
+### Usuário Adm
+* 170105456@aluno.unb.br
+* senha789
