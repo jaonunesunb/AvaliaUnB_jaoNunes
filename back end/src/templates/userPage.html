@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Perfil</title>
+    <style>
+      .navbar {
+        background-color: #333;
+        color: #fff;
+        padding: 10px;
+      }
+
+      .navbar a {
+        color: #fff;
+        text-decoration: none;
+        margin-right: 10px;
+      }
+      .user-container {
+        display: flex;
+        align-items: center;
+      }
+
+      .user-image {
+        width: 200px;
+        margin-right: 20px;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+      }
+
+      .modal-content {
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+      }
+
+      .modal-close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .modal-close:hover,
+      .modal-close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .modal-body {
+        margin-top: 20px;
+      }
+
+      .modal-body label {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .modal-body input {
+        width: 80%;
+        padding: 8px;
+        margin-bottom: 10px;
+      }
+
+      .modal-body button {
+        background-color: #4caf50;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        cursor: pointer;
+      }
+
+      .modal-body button:hover {
+        background-color: #45a049;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <a href="/">Home</a>
+      <a href="/turmas">Turmas</a>
+      <a href="/professors">Professores</a>
+      <a href="/departamentos">Departamentos</a>
+    </div>
+    <h1>Perfil do Usuário</h1>
+    <div class="user-container">
+      {% if user.foto %}
+      <img
+        class="user-image"
+        src="data:image/jpeg;base64,{{ user.foto }}"
+        alt="Foto do Usuário"
+      />
+      {% endif %}
+      <div class="user-info">
+        <h2>Dados do Usuário</h2>
+        <p>Nome: {{ user.nome }}</p>
+        <p>Email: {{ user.email }}</p>
+        <p>Curso: {{ user.curso }}</p>
+        <p>Matrícula: {{ user.matricula }}</p>
+      </div>
+    </div>
+    <br />
+    <button onclick="deleteUser()">Deletar Conta</button>
+    <button onclick="openModal()">Editar Conta</button>
+    <br />
+    <h2>Avaliações do Usuário</h2>
+    <div>
+      {% if avaliacoes %}
+      <ul>
+        {% for avaliacao in avaliacoes %}
+        <li>
+          Disciplina:
+          <a href="/turmas/{{ avaliacao['id_turma'] }}"
+            >{{ avaliacao['id_turma'] }}</a
+          >
+          - Nota: {{ avaliacao['nota'] }}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>Nenhuma avaliação encontrada.</p>
+      {% endif %}
+    </div>
+    <br />
+    <h2>Status das Denúncias</h2>
+    {% if user.is_adm %}
+    <button onclick="window.location.href='/denuncias/admin'">
+      Avaliar Denúncias
+    </button>
+    {% endif %}
+    <div>
+      {% if denuncias %}
+      <ul>
+        {% for denuncia in denuncias %}
+        <li>
+          Denúncia #{{ denuncia['id'] }} - Motivo: {{ denuncia['motivo'] }} {%
+          if user.is_adm %} {% if denuncia['avaliada'] %} - Avaliada {% else %}
+          - Não Avaliada {% endif %} {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>Nenhuma denúncia encontrada.</p>
+      {% endif %}
+    </div>
+    <div id="editUserModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <div class="modal-body">
+          <form id="editUserForm">
+            <label for="editNome">Nome:</label>
+            <input type="text" id="editNome" name="nome" /><br /><br />
+            <label for="editEmail">Email:</label>
+            <input type="email" id="editEmail" name="email" /><br /><br />
+            <label for="editSenha">Senha:</label>
+            <input type="password" id="editSenha" name="senha" /><br /><br />
+            <label for="editCurso">Curso:</label>
+            <input type="text" id="editCurso" name="curso" /><br /><br />
+            <label for="editFoto">Foto:</label>
+            <input
+              type="file"
+              id="editFoto"
+              name="foto"
+              accept="image/*"
+            /><br /><br />
+            <button type="submit">Salvar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function deleteUser() {
+        if (
+          confirm(
+            "Tem certeza de que deseja excluir sua conta? Essa ação não pode ser desfeita."
+          )
+        ) {
+          fetch("/users/{{ user.id }}", {
+            method: "DELETE",
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              alert(data.message);
+              window.location.href = "/";
+            })
+            .catch((error) => {
+              console.error("Erro:", error);
+            });
+        }
+      }
+
+      function openModal() {
+        document.getElementById("editUserModal").style.display = "block";
+      }
+
+      function closeModal() {
+        document.getElementById("editUserModal").style.display = "none";
+      }
+
+      document
+        .getElementById("editUserForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          var form = document.getElementById("editUserForm");
+          var formData = new FormData(form);
+
+          for (var pair of formData.entries()) {
+            if (pair[1] === "") {
+              formData.delete(pair[0]);
+            }
+          }
+
+          fetch("/users/{{ user.id }}", {
+            method: "PUT",
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log(data);
+              alert("Dados do usuário atualizados com sucesso!");
+              closeModal();
+              window.location.reload();
+            })
+            .catch((error) => {
+              console.error("Erro:", error);
+            });
+        });
+    </script>
+  </body>
+</html>

@@ -24,16 +24,16 @@ def create_avaliacao(id_estudante, id_turma, nota, comentario):
         'comentario': comentario
     }
 
-def edit_avaliacao(comentario, avaliacao_id):
+def edit_avaliacao(comentario, nota, avaliacao_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
     update_query = '''
         UPDATE Avaliacoes
-        SET comentario = %s
+        SET comentario = %s, nota = %s
         WHERE id = %s;
     '''
-    cursor.execute(update_query, (comentario, avaliacao_id))
+    cursor.execute(update_query, (comentario, nota, avaliacao_id))
     conn.commit()
 
     cursor.close()
@@ -41,29 +41,10 @@ def edit_avaliacao(comentario, avaliacao_id):
 
     return {
         'id': avaliacao_id,
-        'comentario': comentario
+        'comentario': comentario,
+        'nota': nota
     }
 
-def edit_avaliacao(comentario, avaliacao_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    update_query = '''
-        UPDATE Avaliacoes
-        SET comentario = %s
-        WHERE id = %s;
-    '''
-    cursor.execute(update_query, (comentario, avaliacao_id))
-    conn.commit()
-
-    cursor.close()
-    conn.close()
-
-    return {
-        'id': avaliacao_id,
-        'comentario': comentario
-    }
-    
 def get_avaliacoes():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -111,6 +92,77 @@ def get_avaliacoes_by_turma_id(turma_id):
         }
         for avaliacao in avaliacoes
     ]
+    
+def get_avaliacoes_by_userID(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    select_query = '''
+        SELECT * FROM Avaliacoes WHERE id_estudante = %s;
+    '''
+    cursor.execute(select_query, (user_id,))
+    avaliacoes = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return [
+        {
+            'id': avaliacao[0],
+            'id_estudante': avaliacao[1],
+            'id_turma': avaliacao[2],
+            'nota': avaliacao[3],
+            'comentario': avaliacao[4]
+        }
+        for avaliacao in avaliacoes
+    ]
+
+def get_avaliacoes_by_ID(avaliation_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    select_query = '''
+        SELECT * FROM Avaliacoes WHERE id = %s;
+    '''
+    cursor.execute(select_query, (avaliation_id,))
+    avaliacao = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return {
+        'id': avaliacao[0],
+        'id_estudante': avaliacao[1],
+        'id_turma': avaliacao[2],
+        'nota': avaliacao[3],
+        'comentario': avaliacao[4]
+    }
+
+def get_all_avaliacoes_same_ID(avaliation_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    select_query = '''
+        SELECT * FROM Avaliacoes WHERE id = %s;
+    '''
+    cursor.execute(select_query, (avaliation_id,))
+    avaliacoes = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    avaliacoes_list = []
+    for avaliacao in avaliacoes:
+        avaliacoes_list.append({
+            'id': avaliacao[0],
+            'id_estudante': avaliacao[1],
+            'id_turma': avaliacao[2],
+            'nota': avaliacao[3],
+            'comentario': avaliacao[4]
+        })
+
+    return avaliacoes_list
+
 
 def delete_avaliacao(avaliacao_id):
     conn = get_db_connection()

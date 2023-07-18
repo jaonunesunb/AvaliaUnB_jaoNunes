@@ -1,3 +1,4 @@
+from src.services.avaluations.index import get_avaliacoes_by_ID
 from src.db_connection.connection import get_db_connection
 
 def create_denuncia(id_estudante, id_avaliacao, motivo, avaliada=False):
@@ -78,7 +79,16 @@ def get_all_denuncias():
     cursor.close()
     conn.close()
 
-    return denuncias
+    return [ 
+        {
+            'id': denuncia[0],
+            'id_estudante': denuncia[1],
+            'id_avaliacao': denuncia[2],
+            'motivo': denuncia[3],
+            'avaliada': denuncia[4]
+        }
+        for denuncia in denuncias
+    ]
 
 
 def get_denuncia_by_id(denuncia_id):
@@ -93,8 +103,40 @@ def get_denuncia_by_id(denuncia_id):
     cursor.close()
     conn.close()
 
-    return denuncia
+    if denuncia is not None:
+        return {
+            'id': denuncia[0],
+            'id_estudante': denuncia[1],
+            'id_avaliacao': denuncia[2],
+            'motivo': denuncia[3],
+            'avaliada': denuncia[4]
+        }
+    else:
+        return None
 
+
+def get_denuncias_by_estudante_id(estudante_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    query = "SELECT * FROM Denuncias WHERE id_estudante = %s"
+    cursor.execute(query, (estudante_id,))
+
+    denuncias = cursor.fetchall()
+    print(denuncias)
+    cursor.close()
+    conn.close()
+
+    return [
+        {
+            'id': denuncia[0],
+            'id_estudante': denuncia[1],
+            'id_avaliacao': denuncia[2],
+            'motivo': denuncia[3],
+            'avaliada': denuncia[4]
+        }
+        for denuncia in denuncias
+    ]
 
 def delete_denuncia(denuncia_id):
     conn = get_db_connection()
@@ -107,3 +149,5 @@ def delete_denuncia(denuncia_id):
 
     cursor.close()
     conn.close()
+
+

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Denúncias</title>
+    <style>
+      .navbar {
+        background-color: #333;
+        color: #fff;
+        padding: 10px;
+      }
+
+      .navbar a {
+        color: #fff;
+        text-decoration: none;
+        margin-right: 10px;
+      }
+
+      .report {
+        margin-bottom: 20px;
+        padding: 10px;
+        background-color: #f0f0f0;
+      }
+
+      .report h3 {
+        margin: 0;
+      }
+
+      .report p {
+        margin: 5px 0;
+      }
+
+      .report-buttons {
+        margin-top: 10px;
+      }
+
+      .report-buttons button {
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <a href="/">Home</a>
+      <a href="/turmas">Turmas</a>
+      <a href="/professors">Professores</a>
+      <a href="/departamentos">Departamentos</a>
+    </div>
+
+    <h1>Denúncias</h1>
+
+    <div id="reportsContainer">
+      {% for report in denuncias %}
+      <div class="report">
+        <h3>Denúncia #{{ report.id }}</h3>
+        <p>ID do estudante: {{ report.id_estudante }}</p>
+        <p>ID da avaliação: {{ report.id_avaliacao }}</p>
+
+        {% for avaliacao in avaliacoes %} {% if avaliacao.id ==
+        report.id_avaliacao %}
+        <p>Nota da avaliação: {{ avaliacao.nota }}</p>
+        <p>Comentário da avaliação: {{ avaliacao.comentario }}</p>
+        {% endif %} {% endfor %}
+
+        <p>Motivo: {{ report.motivo }}</p>
+        <p>Avaliada: {{ report.avaliada }}</p>
+
+        <div class="report-buttons">
+          <button onclick="reviewReport({{ report.id }})">Avaliar</button>
+          <button onclick="deleteReport({{ report.id }})">Excluir</button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div id="quantidadeDenunciasNaoResolvidas"></div>
+    <div id="quantidadeDenunciasResolvidas"></div>
+    <script>
+      function getReports() {
+        fetch("/denuncias/admin", {
+          method: "GET",
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            renderReports(data.denuncias, data.avaliacoes);
+            getQuantidadeDenunciasNaoResolvidas();
+            getQuantidadeDenunciasResolvidas();
+          })
+          .catch((error) => {
+            console.error("Erro:", error);
+          });
+      }
+      function getQuantidadeDenunciasNaoResolvidas() {
+        fetch("/procedures/denuncias-nao-resolvidas")
+          .then((response) => response.json())
+          .then((data) => {
+            renderQuantidadeDenunciasNaoResolvidas(data.quantidade);
+          })
+          .catch((error) => {
+            console.error("Erro:", error);
+          });
+      }
+
+      function getQuantidadeDenunciasResolvidas() {
+        fetch("/procedures/denuncias-resolvidas")
+          .then((response) => response.json())
+          .then((data) => {
+            renderQuantidadeDenunciasResolvidas(data.quantidade);
+          })
+          .catch((error) => {
+            console.error("Erro:", error);
+          });
+      }
+
+      function renderQuantidadeDenunciasNaoResolvidas(quantidade) {
+        var container = document.getElementById(
+          "quantidadeDenunciasNaoResolvidas"
+        );
+        container.textContent = "Denúncias não resolvidas: " + quantidade;
+      }
+
+      function renderQuantidadeDenunciasResolvidas(quantidade) {
+        var container = document.getElementById(
+          "quantidadeDenunciasResolvidas"
+        );
+        container.textContent = "Denúncias resolvidas: " + quantidade;
+      }
+
+      function renderReports(reports, avaliacoes) {
+        var container = document.getElementById("reportsContainer");
+        container.innerHTML = "";
+
+        if (reports.length === 0) {
+          var message = document.createElement("p");
+          message.textContent = "Nenhuma denúncia encontrada.";
+          container.appendChild(message);
+          return;
+        }
+
+        reports.forEach(function (report) {
+          var reportDiv = document.createElement("div");
+          reportDiv.classList.add("report");
+          console.log(report);
+          var title = document.createElement("h3");
+          title.textContent = "Denúncia #" + report.id;
+          reportDiv.appendChild(title);
+
+          var studentId = document.createElement("p");
+          studentId.textContent = "ID do estudante: " + report.id_estudante;
+          reportDiv.appendChild(studentId);
+
+          var evaluationId = document.createElement("p");
+          evaluationId.textContent = "ID da avaliação: " + report.id_avaliacao;
+          reportDiv.appendChild(evaluationId);
+
+          var nota = document.createElement("p");
+          nota.textContent =
+            "Nota da avaliação: " +
+            (getAvaliacaoById(avaliacoes, report.id_avaliacao)
+              ? getAvaliacaoById(avaliacoes, report.id_avaliacao).nota
+              : "");
+          reportDiv.appendChild(nota);
+
+          var comentario = document.createElement("p");
+          comentario.textContent =
+            "Comentário da avaliação: " +
+            (getAvaliacaoById(avaliacoes, report.id_avaliacao)
+              ? getAvaliacaoById(avaliacoes, report.id_avaliacao).comentario
+              : "");
+          reportDiv.appendChild(comentario);
+
+          var reason = document.createElement("p");
+          reason.textContent = "Motivo: " + report.motivo;
+          reportDiv.appendChild(reason);
+
+          var reviewed = document.createElement("p");
+          reviewed.textContent = "Avaliada: " + report.avaliada;
+          reportDiv.appendChild(reviewed);
+
+          var reportButtons = document.createElement("div");
+          reportButtons.classList.add("report-buttons");
+
+          var reviewButton = document.createElement("button");
+          reviewButton.textContent = "Avaliar";
+          reviewButton.addEventListener("click", function () {
+            reviewReport(report.id);
+          });
+          reportButtons.appendChild(reviewButton);
+
+          var deleteButton = document.createElement("button");
+          deleteButton.textContent = "Excluir";
+          deleteButton.addEventListener("click", function () {
+            deleteReport(report.id);
+          });
+          reportButtons.appendChild(deleteButton);
+
+          reportDiv.appendChild(reportButtons);
+
+          container.appendChild(reportDiv);
+        });
+      }
+
+      function getAvaliacaoById(avaliacoes, id) {
+        return avaliacoes.find(function (avaliacao) {
+          return avaliacao.id === id;
+        });
+      }
+
+      function reviewReport(reportId) {
+        var reviewed = confirm("Esta denúncia foi avaliada?");
+        var data = {
+          avaliada: reviewed,
+        };
+
+        fetch("/denuncias/" + reportId, {
+          method: "PUT",
+          body: JSON.stringify(data),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+            getReports();
+          })
+          .catch((error) => {
+            console.error("Erro:", error);
+          });
+      }
+
+      function deleteReport(reportId) {
+        var deleteConfirmed = confirm(
+          "Tem certeza de que deseja excluir esta denúncia?"
+        );
+        if (deleteConfirmed) {
+          fetch("/denuncias/" + reportId, {
+            method: "DELETE",
+          })
+            .then((response) => {
+              console.log(response);
+              getReports();
+            })
+            .catch((error) => {
+              console.error("Erro:", error);
+            });
+        }
+      }
+
+      getReports();
+      getQuantidadeDenunciasNaoResolvidas();
+      getQuantidadeDenunciasResolvidas();
+    </script>
+  </body>
+</html>

@@ -56,6 +56,24 @@ def get_departamento_by_id(departamento_id):
     else:
         return None
 
+def get_departamento_name(departamento_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    select_query = '''
+        SELECT nome FROM Departamentos WHERE id = %s
+    '''
+    cursor.execute(select_query, (departamento_id,))
+    departamento = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if departamento:
+        return departamento[0]
+    else:
+        return None
+
 
 
 

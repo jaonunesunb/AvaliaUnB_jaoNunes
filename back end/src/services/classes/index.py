@@ -168,6 +168,7 @@ def get_class_by_id(class_id):
         }
     else:
         return None
+    
 def delete_class(class_id):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -180,3 +181,6 @@ def delete_class(class_id):
 
     cursor.close()
     conn.close()
+    
+
+

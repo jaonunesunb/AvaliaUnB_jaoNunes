@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Turmas - Sistema de Avaliação de Disciplinas e Professores</title>
+    <title>AvaliaUnB</title>
     <style>
-      /* Estilos CSS personalizados */
       .navbar {
         background-color: #333;
         color: #fff;
@@ -40,13 +39,37 @@
       tr:nth-child(even) {
         background-color: #f9f9f9;
       }
+
+      .pagination {
+        margin-top: 20px;
+      }
+
+      .pagination a {
+        display: inline-block;
+        padding: 8px 16px;
+        text-decoration: none;
+        color: #000;
+        background-color: #f2f2f2;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .pagination a.active {
+        background-color: #333;
+        color: #fff;
+      }
+
+      .pagination a:hover:not(.active) {
+        background-color: #ddd;
+      }
     </style>
   </head>
   <body>
     <div class="navbar">
       <a href="/">Home</a>
       <a href="/turmas">Turmas</a>
-      <!-- Adicione os outros links da navbar aqui -->
+      <a href="/professors">Professores</a>
+      <a href="/departamentos">Departamentos</a>
     </div>
 
     <h1>Turmas</h1>
@@ -59,7 +82,7 @@
         name="search"
         placeholder="Digite o nome do professor ou turma"
       />
-      <button type="button">Pesquisar</button>
+      <button type="button" onclick="searchTurmas()">Pesquisar</button>
     </div>
 
     <table>
@@ -72,7 +95,10 @@
         <th>Local</th>
       </tr>
       {% for turma in turmas %}
-      <tr onclick="window.location='/turmas/{{ turma['turma'] }}';" style="cursor: pointer;"> 
+      <tr
+        onclick="window.location='/turmas/{{ turma['turma'] }}';"
+        style="cursor: pointer"
+      >
         <td>{{ turma['turma'] }}</td>
         <td>{{ turma['disciplina'] }}</td>
         <td>{{ turma['professor'] }}</td>
@@ -82,5 +108,72 @@
       </tr>
       {% endfor %}
     </table>
+
+    <div class="pagination">
+      {% if total_pages > 1 %} {% if current_page > 1 %}
+      <a href="/turmas?page={{ current_page - 1 }}">&laquo; Anterior</a>
+      {% endif %} {% for page in pages %} {% if page == current_page %}
+      <a class="active" href="/turmas?page={{ page }}">{{ page }}</a>
+      {% else %}
+      <a href="/turmas?page={{ page }}">{{ page }}</a>
+      {% endif %} {% endfor %} {% if current_page < total_pages %}
+      <a href="/turmas?page={{ current_page + 1 }}">Próxima &raquo;</a>
+      {% endif %} {% endif %}
+    </div>
+
+    <script>
+      function searchTurmas() {
+        var searchInput = document.getElementById("search").value;
+        var url = "/turmas?search=" + searchInput;
+
+        fetch(url)
+          .then(function (response) {
+            return response.json();
+          })
+          .then(function (data) {
+            var turmas = data.turmas;
+            var table = document.querySelector("table");
+            var tbody = table.querySelector("tbody");
+            tbody.innerHTML = "";
+
+            turmas.forEach(function (turma) {
+              var tr = document.createElement("tr");
+              tr.onclick = function () {
+                window.location = "/turmas/" + turma.turma;
+              };
+              tr.style.cursor = "pointer";
+
+              var tdTurma = document.createElement("td");
+              tdTurma.textContent = turma.turma;
+              tr.appendChild(tdTurma);
+
+              var tdDisciplina = document.createElement("td");
+              tdDisciplina.textContent = turma.disciplina;
+              tr.appendChild(tdDisciplina);
+
+              var tdProfessor = document.createElement("td");
+              tdProfessor.textContent = turma.professor;
+              tr.appendChild(tdProfessor);
+
+              var tdHorario = document.createElement("td");
+              tdHorario.textContent = turma.horario;
+              tr.appendChild(tdHorario);
+
+              var tdTotalVagas = document.createElement("td");
+              tdTotalVagas.textContent = turma.total_vagas;
+              tr.appendChild(tdTotalVagas);
+
+              var tdLocal = document.createElement("td");
+              tdLocal.textContent = turma.local;
+              tr.appendChild(tdLocal);
+
+              tbody.appendChild(tr);
+            });
+          })
+          .catch(function (error) {
+            console.error("Erro:", error);
+          });
+      }
+    </script>
   </body>
 </html>

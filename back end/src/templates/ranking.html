@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>AvaliaUnB</title>
+    <style>
+      .navbar {
+        background-color: #333;
+        color: #fff;
+        padding: 10px;
+      }
+
+      .navbar a {
+        color: #fff;
+        text-decoration: none;
+        margin-right: 10px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <a href="/">Home</a>
+      <a href="/turmas">Turmas</a>
+      <a href="/professors">Professores</a>
+      <a href="/departamentos">Departamentos</a>
+    </div>
+    <h2>Turmas com Melhores Notas</h2>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Turma</th>
+        <th>Média de Notas</th>
+      </tr>
+      {% for turma in turmas_melhores_notas %}
+      <tr>
+        <td>{{ turma['id'] }}</td>
+        <td>{{ turma['turma'] }}</td>
+        <td>{{ turma['media_notas'] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <h2>Turmas com Piores Notas</h2>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Turma</th>
+        <th>Média de Notas</th>
+      </tr>
+      {% for turma in turmas_piores_notas %}
+      <tr>
+        <td>{{ turma['id'] }}</td>
+        <td>{{ turma['turma'] }}</td>
+        <td>{{ turma['media_notas'] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </body>
+</html>

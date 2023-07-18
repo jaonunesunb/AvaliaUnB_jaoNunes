@@ -1,6 +1,7 @@
+import math
 from src.db_connection.connection import get_db_connection
+from flask import request
 
-from src.db_connection.connection import get_db_connection
 
 def create_professor(nome, departamento):
     conn = get_db_connection()
@@ -35,16 +36,37 @@ def get_professor_by_id(professor_id):
     conn.close()
     return professor
 
-def get_all_professores():
+def get_all_professores(page, per_page):
     conn = get_db_connection()
     cursor = conn.cursor()
-    select_query = "SELECT * FROM Professores"
-    cursor.execute(select_query)
-    professores = cursor.fetchall()
+
+    select_query = "SELECT * FROM Professores ORDER BY id OFFSET %s LIMIT %s"
+    offset = (page - 1) * per_page
+    limit = min(per_page, 50)
+    cursor.execute(select_query, (offset, limit))
+
+    column_names = [desc[0] for desc in cursor.description]
+    professores = [dict(zip(column_names, row)) for row in cursor.fetchall()]
+
     cursor.close()
     conn.close()
-    return professores
 
+    total_professores = 50
+    total_pages = math.ceil(total_professores / per_page)
+    current_page = page
+    previous_page = page - 1 if page > 1 else None
+    next_page = page + 1 if page < total_pages else None
+    pages = list(range(1, total_pages + 1))
+
+    return {
+        'professores': professores,
+        'total_pages': total_pages,
+        'current_page': current_page,
+        'previous_page': previous_page,
+        'next_page': next_page,
+        'pages': pages
+    }
+    
 def update_professor(professor_id, nome=None, departamento=None):
     conn = get_db_connection()
     cursor = conn.cursor()

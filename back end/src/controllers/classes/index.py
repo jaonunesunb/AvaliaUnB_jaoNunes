@@ -1,7 +1,7 @@
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for
-from flask_login import current_user
+import math
+from flask import Blueprint, request, jsonify, render_template, session
 from src.services.avaluations.index import get_avaliacoes_by_turma_id
-from src.middlewares.index import check_admin, authenticate_token
+from src.middlewares.index import check_admin
 from src.services.classes.index import create_class, edit_class, get_classes, get_class_by_id, delete_class
 from src.services.professors.index import get_professor_by_id
 from src.services.disciplines.index import get_disciplina_by_id
@@ -10,13 +10,12 @@ classes_blueprint = Blueprint('turmas', __name__)
 
 @classes_blueprint.route('/turmas', methods=['GET'])
 def get_classes_controller():
-    page = 1  
+    page = int(request.args.get('page', 1)) 
     per_page = 10  
-    class_data = get_classes(page, per_page)
+    class_data = get_classes(page, 50)  
     turmas = []
 
     for data in class_data:
-        print(data)
         disciplina_id = data[8]
         disciplina_obj = get_disciplina_by_id(disciplina_id)
         disciplina = disciplina_obj[1] if disciplina_obj else ''
@@ -33,11 +32,15 @@ def get_classes_controller():
             'cod_depto': data[9]
         }
         turmas.append(turma)
-    
-    return render_template('turmas.html', turmas=turmas)
+    total_turmas = 50  
+    total_pages = math.ceil(total_turmas / per_page)  
 
-@classes_blueprint.route('/turmas/<int:class_id>', methods=['PATCH'])
-#@check_admin
+    pages = range(1, total_pages + 1)  
+
+    return render_template('turmas.html', turmas=turmas, total_pages=total_pages, current_page=page, pages=pages)
+
+@classes_blueprint.route('/turmas/<int:class_id>', methods=['PUT'])
+@check_admin(True)
 def edit_class_controller(class_id):
     data = request.json
 
@@ -56,22 +59,19 @@ def edit_class_controller(class_id):
     return jsonify(class_data)
 
 @classes_blueprint.route('/turmas/<int:class_id>', methods=['DELETE'])
-#@check_admin
+@check_admin(True)
 def delete_class_controller(class_id):
     delete_class(class_id)
     return jsonify({'message': 'Turma excluída com sucesso'})
-
-
-@classes_blueprint.route('/turmas/<int:turma_id>', methods=['GET'])
-def get_class_details_controller(turma_id):
-    turma = get_class_by_id(turma_id)
-    avaliacoes = get_avaliacoes_by_turma_id(turma_id)
-    return render_template('turmasDetails.html', turma=turma, avaliacoes=avaliacoes, current_user=current_user)
-
+ 
 @classes_blueprint.route('/turmas/<int:class_id>', methods=['GET'])
 def get_class_by_id_controller(class_id):
     class_data = get_class_by_id(class_id)
     if class_data:
-        return jsonify(class_data)
+        avaliacoes = get_avaliacoes_by_turma_id(class_id)
+        user_id = session['user_id'] if 'user_id' in session else None
+        is_adm = session['is_adm'] if 'is_adm' in session else False
+        nome = session['nome'] if 'nome' in session else None
+        return render_template('turmasDetails.html', turma=class_data, avaliacoes=avaliacoes, current_user={'id': user_id, 'nome': nome, 'is_adm': is_adm})
     else:
         return jsonify({'message': 'Turma não encontrada'}), 404
