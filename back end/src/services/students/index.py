@@ -93,7 +93,6 @@ def edit_user(user_id, nome=None, email=None, senha=None, curso=None, foto=None,
         update_values.append(is_adm)
 
     if not update_fields:
-        # Nenhum campo foi fornecido para atualização
         return None
 
     set_clause = ', '.join([f'{field} = %s' for field in update_fields])
