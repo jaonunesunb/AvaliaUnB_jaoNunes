@@ -12,6 +12,12 @@ users_blueprint = Blueprint('users', __name__)
 from flask import request
 from werkzeug.utils import secure_filename
 
+import os
+from flask import Blueprint, jsonify, request, redirect
+from werkzeug.utils import secure_filename
+
+users_blueprint = Blueprint('users_blueprint', __name__)
+
 @users_blueprint.route('/users/register', methods=['POST'])
 def create_user_controller():
     nome = request.form.get('nome')
@@ -31,7 +37,11 @@ def create_user_controller():
 
     user = create_user(nome, email, senha, matricula, curso, foto_base64, is_adm=False)
 
-    return jsonify(user), 201
+    if user:
+        return redirect("/")
+    else:
+        return jsonify(user), 201
+
 
 @users_blueprint.route('/users/<int:user_id>', methods=['PUT'])
 @is_authenticated
