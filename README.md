@@ -49,8 +49,13 @@ Antes de executar o projeto, é necessário criar as tabelas no banco de dados e
 ```
 python app.py
 ```
+3. Execute o seguinte comando para popular o banco de dados:
 
-3. Abra um navegador da web e acesse `http://localhost:5000` para visualizar a aplicação.
+```
+python insert_data.py
+```
+
+4. Abra um navegador da web e acesse `http://localhost:5000` para visualizar a aplicação.
 
 ## Utilização
 
