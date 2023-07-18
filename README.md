@@ -7,7 +7,7 @@ O Projeto AvaliaUnB é uma aplicação web para avaliação de turmas e professo
 Certifique-se de ter os seguintes requisitos instalados em sua máquina antes de executar o projeto:
 
 - Python (versão 3.6 ou superior)
-- PostgreSQL (ou outro banco de dados compatível com psycopg2)
+- PostgreSQL 
 - Pacotes Python listados em `requirements.txt`
 
 ## Instalação
@@ -44,18 +44,25 @@ Substitua `nomedobanco`, `usuariodobanco`, `senhadobanco`, `localhost` e `5432` 
 Antes de executar o projeto, é necessário criar as tabelas no banco de dados e inserir alguns dados iniciais. Siga as etapas abaixo:
 
 1. Certifique-se de estar no diretório raiz do projeto.
-2. Execute o seguinte comando para criar as tabelas no banco de dados, as views e as procedures:
+   
+2. Execute o seguinte comando para criar um CSV de turmas com dados tratados 
+
+```
+python src/utils/tratamento_dados.py
+```
+3. Execute o seguinte comando para criar as tabelas no banco de dados, as views e as procedures:
 
 ```
 python app.py
 ```
-3. Execute o seguinte comando para popular o banco de dados:
+
+4. Execute o seguinte comando para popular o banco de dados:
 
 ```
 python insert_data.py
 ```
 
-4. Abra um navegador da web e acesse `http://localhost:5000` para visualizar a aplicação.
+5. Abra um navegador da web e acesse `http://localhost:5000` para visualizar a aplicação.
 
 ## Utilização
 
