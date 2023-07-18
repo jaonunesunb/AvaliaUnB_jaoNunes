@@ -2,9 +2,52 @@
 <html>
   <head>
     <title>Registro</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+
+      form {
+        width: 300px;
+        padding: 20px;
+        background-color: #f0f0f0;
+        border-radius: 5px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      input[type="text"],
+      input[type="email"],
+      input[type="password"],
+      input[type="file"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+      }
+
+      input[type="submit"] {
+        background-color: #4caf50;
+        color: #fff;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+    </style>
   </head>
   <body>
-    <h1>Registro</h1>
     <form method="POST" action="/users/register" enctype="multipart/form-data">
       <label for="nome">Nome:</label>
       <input type="text" name="nome" id="nome" required /><br /><br />
