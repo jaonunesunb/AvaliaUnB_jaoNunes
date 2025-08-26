@@ -1,0 +1,265 @@
+body {
+  font-family: Arial, sans-serif;
+}
+
+/* Register page styles */
+body.register {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+body.register form {
+  width: 300px;
+  padding: 20px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+}
+
+body.register label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+body.register input[type="text"],
+body.register input[type="email"],
+body.register input[type="password"],
+body.register input[type="file"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+
+body.register input[type="submit"] {
+  background-color: #4caf50;
+  color: #fff;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Navbar styles */
+.navbar {
+  background-color: #333;
+  color: #fff;
+  padding: 10px;
+}
+
+.navbar a {
+  color: #fff;
+  text-decoration: none;
+  margin-right: 10px;
+}
+
+/* Landing page navbar overrides */
+body.landing .navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f5f5f5;
+  padding: 10px 20px;
+}
+
+body.landing .navbar a {
+  color: #333;
+  padding: 8px;
+  border-radius: 5px;
+  background-color: #e6e6e6;
+}
+
+body.landing .navbar a:hover {
+  background-color: #d3d3d3;
+}
+
+body.landing .navbar ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+body.landing .navbar li {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+body.landing .navbar li:last-child {
+  margin-right: 0;
+}
+
+/* Table styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 8px;
+  text-align: left;
+  border: 1px solid #ddd;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Turmas details */
+.details {
+  margin-top: 20px;
+}
+
+.comments {
+  margin-top: 20px;
+}
+
+.comment {
+  margin-bottom: 10px;
+}
+
+.comment textarea {
+  width: 100%;
+  height: 80px;
+}
+
+.actions {
+  margin-top: 20px;
+}
+
+/* Pagination */
+.pagination {
+  margin-top: 20px;
+}
+
+.pagination a {
+  display: inline-block;
+  padding: 8px 16px;
+  text-decoration: none;
+  color: #000;
+  background-color: #f2f2f2;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-right: 5px;
+}
+
+.pagination a.active {
+  background-color: #333;
+  color: #fff;
+}
+
+.pagination a:hover:not(.active) {
+  background-color: #ddd;
+}
+
+/* Search bar */
+.search-bar {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+/* User page */
+.user-container {
+  display: flex;
+  align-items: center;
+}
+
+.user-image {
+  width: 200px;
+  margin-right: 20px;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 10% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 500px;
+}
+
+.modal-close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.modal-close:hover,
+.modal-close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.modal-body {
+  margin-top: 20px;
+}
+
+.modal-body label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.modal-body input {
+  width: 80%;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.modal-body button {
+  background-color: #4caf50;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-body button:hover {
+  background-color: #45a049;
+}
+
+/* Denuncias page */
+.report {
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #f0f0f0;
+}
+
+.report h3 {
+  margin: 0;
+}
+
+.report p {
+  margin: 5px 0;
+}
+
+.report-buttons {
+  margin-top: 10px;
+}
+
+.report-buttons button {
+  margin-right: 10px;
+}

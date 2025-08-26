@@ -13,33 +13,22 @@
       <input type="submit" value="Login" />
     </form>
 
-    <script>
-      document
-        .querySelector("form")
-        .addEventListener("submit", function (event) {
-          event.preventDefault();
+    <!DOCTYPE html>
+<html>
+  <head>
+    <title>Login</title>
+    <link rel="stylesheet" href="/static/css/main.css" />
+  </head>
+  <body>
+    <h1>Login</h1>
+    <form method="POST" action="/users/login">
+      <label for="email">Email:</label>
+      <input type="email" name="email" id="email" required /><br /><br />
+      <label for="password">Senha:</label>
+      <input type="password" name="senha" id="senha" required /><br /><br />
+      <input type="submit" value="Login" />
+    </form>
 
-          var email = document.getElementById("email").value;
-          var senha = document.getElementById("senha").value;
-
-          var formData = new FormData();
-          formData.append("email", email);
-          formData.append("senha", senha);
-          fetch("/users/login", {
-            method: "POST",
-            body: formData,
-          })
-            .then((response) => {
-              if (response.ok) {
-                window.location.href = response.url;
-              } else {
-                throw new Error("Erro ao fazer login");
-              }
-            })
-            .catch((error) => {
-              console.error("Erro:", error);
-            });
-        });
-    </script>
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
   </body>
 </html>

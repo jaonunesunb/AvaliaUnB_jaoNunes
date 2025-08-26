@@ -14,7 +14,7 @@ from views import create_denuncias_views, views_denuncias
 from views import create_views, views_bp
 from procedures import create_procedures, procedures_bp
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='src/static')
 load_dotenv()
 CORS(app)
 

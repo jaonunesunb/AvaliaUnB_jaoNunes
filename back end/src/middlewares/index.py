@@ -1,8 +1,5 @@
 from functools import wraps
-from flask import g, request, jsonify
-
-from flask import  session, redirect, url_for, flash
-from functools import wraps
+from flask import session, redirect, flash
 
 def is_authenticated(f):
     @wraps(f)
