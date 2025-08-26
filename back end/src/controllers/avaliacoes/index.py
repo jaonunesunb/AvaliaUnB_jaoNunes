@@ -31,15 +31,15 @@ def get_avaliacoes_controller():
     avaliacoes = get_avaliacoes()
     return jsonify(avaliacoes)
 
-@avaliacoes_blueprint.route('/avaliacoes/<int:avaliacao_id>', methods=['GET'])
-def get_avaliacoes_by_turma_id_controller(avaliacao_id):
-    avaliacao = get_avaliacoes_by_turma_id(avaliacao_id)
+@avaliacoes_blueprint.route('/avaliacoes/turma/<int:turma_id>', methods=['GET'])
+def get_avaliacoes_by_turma_id_controller(turma_id):
+    avaliacao = get_avaliacoes_by_turma_id(turma_id)
     if avaliacao:
         return jsonify(avaliacao)
     else:
         return jsonify({'message': 'Avaliacao not found'}), 404
 
-@avaliacoes_blueprint.route('/avaliacoes/<int:user_id>', methods=['GET'])
+@avaliacoes_blueprint.route('/avaliacoes/usuario/<int:user_id>', methods=['GET'])
 def get_avaliacoes_by_userID_controller(user_id):
     avaliacao = get_avaliacoes_by_userID(user_id)
     if avaliacao:

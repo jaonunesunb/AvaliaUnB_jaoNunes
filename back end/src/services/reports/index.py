@@ -1,21 +1,15 @@
 from src.services.avaluations.index import get_avaliacoes_by_ID
-from src.db_connection.connection import get_db_connection
+from src.db_connection.connection import get_cursor
 
 def create_denuncia(id_estudante, id_avaliacao, motivo, avaliada=False):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     insert_query = '''
         INSERT INTO Denuncias (id_estudante, id_avaliacao, motivo, avaliada)
         VALUES (%s, %s, %s, %s)
         RETURNING id
     '''
-    cursor.execute(insert_query, (id_estudante, id_avaliacao, motivo, avaliada))
-    denuncia_id = cursor.fetchone()[0]
-    conn.commit()
-
-    cursor.close()
-    conn.close()
+    with get_cursor() as cursor:
+        cursor.execute(insert_query, (id_estudante, id_avaliacao, motivo, avaliada))
+        denuncia_id = cursor.fetchone()[0]
 
     return {
         'id': denuncia_id,
@@ -27,9 +21,6 @@ def create_denuncia(id_estudante, id_avaliacao, motivo, avaliada=False):
 
 
 def update_denuncia(denuncia_id, id_estudante=None, id_avaliacao=None, motivo=None, avaliada=None):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     update_values = []
 
     if id_estudante is not None:
@@ -52,11 +43,8 @@ def update_denuncia(denuncia_id, id_estudante=None, id_avaliacao=None, motivo=No
     update_values.append(('denuncia_id', denuncia_id))
     update_values = [value for _, value in update_values]
 
-    cursor.execute(update_query, update_values)
-    conn.commit()
-
-    cursor.close()
-    conn.close()
+    with get_cursor() as cursor:
+        cursor.execute(update_query, update_values)
 
     return {
         'id': denuncia_id,
@@ -68,18 +56,12 @@ def update_denuncia(denuncia_id, id_estudante=None, id_avaliacao=None, motivo=No
 
 
 def get_all_denuncias():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     query = "SELECT * FROM Denuncias"
-    cursor.execute(query)
+    with get_cursor() as cursor:
+        cursor.execute(query)
+        denuncias = cursor.fetchall()
 
-    denuncias = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-    return [ 
+    return [
         {
             'id': denuncia[0],
             'id_estudante': denuncia[1],
@@ -92,16 +74,10 @@ def get_all_denuncias():
 
 
 def get_denuncia_by_id(denuncia_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     query = "SELECT * FROM Denuncias WHERE id = %s"
-    cursor.execute(query, (denuncia_id,))
-
-    denuncia = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
+    with get_cursor() as cursor:
+        cursor.execute(query, (denuncia_id,))
+        denuncia = cursor.fetchone()
 
     if denuncia is not None:
         return {
@@ -116,16 +92,11 @@ def get_denuncia_by_id(denuncia_id):
 
 
 def get_denuncias_by_estudante_id(estudante_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     query = "SELECT * FROM Denuncias WHERE id_estudante = %s"
-    cursor.execute(query, (estudante_id,))
-
-    denuncias = cursor.fetchall()
+    with get_cursor() as cursor:
+        cursor.execute(query, (estudante_id,))
+        denuncias = cursor.fetchall()
     print(denuncias)
-    cursor.close()
-    conn.close()
 
     return [
         {
@@ -139,15 +110,6 @@ def get_denuncias_by_estudante_id(estudante_id):
     ]
 
 def delete_denuncia(denuncia_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     query = "DELETE FROM Denuncias WHERE id = %s"
-    cursor.execute(query, (denuncia_id,))
-
-    conn.commit()
-
-    cursor.close()
-    conn.close()
-
-
+    with get_cursor() as cursor:
+        cursor.execute(query, (denuncia_id,))

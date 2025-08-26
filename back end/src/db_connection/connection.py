@@ -1,5 +1,9 @@
 import psycopg2
 from dotenv import dotenv_values
+from contextlib import contextmanager
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 def get_db_connection():
     # Carrega as variáveis de ambiente do arquivo .env
@@ -20,9 +24,24 @@ def get_db_connection():
         user=db_config['user'],
         password=db_config['password'],
         host=db_config['host'],
-        port=db_config['port']
+        port=db_config['port'],
     )
     return conn
+
+@contextmanager
+def get_cursor():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        yield cursor
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        logging.exception("Database operation failed")
+        raise
+    finally:
+        cursor.close()
+        conn.close()
 
 def create_tables():
     conn = get_db_connection()
