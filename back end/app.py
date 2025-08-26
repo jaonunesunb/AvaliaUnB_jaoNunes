@@ -2,7 +2,7 @@ import os
 from flask import Flask, render_template
 from flask_cors import CORS
 from dotenv import load_dotenv
-from src.db_connection.connection import create_tables, get_db_connection
+from src.db_connection.connection import create_tables, get_db_connection, execute_query
 from src.controllers.avaliacoes.index import avaliacoes_blueprint
 from src.controllers.students.index import users_blueprint
 from src.controllers.reports.index import reports_bp
@@ -41,6 +41,11 @@ app.register_blueprint(disciplinas_blueprint)
 
 app.jinja_loader.searchpath.insert(0, os.path.join(os.path.dirname(__file__), 'src/templates'))
 
+def add_turmas_indexes():
+    sql_file = os.path.join(os.path.dirname(__file__), 'src', 'SQL', 'add_turmas_indexes.sql')
+    with open(sql_file, 'r') as file:
+        query = file.read()
+    execute_query(query)
 
 @app.route('/')
 def landing():
@@ -63,6 +68,7 @@ if __name__ == '__main__':
     create_procedures()
     create_tables()
     create_views()
+    add_turmas_indexes()
     create_denuncias_views()
     create_procedures()
     conn = get_db_connection()

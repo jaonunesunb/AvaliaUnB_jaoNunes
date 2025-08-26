@@ -100,14 +100,42 @@ def get_departamento_id_by_name(departamento_name):
 
 def get_classes(page, per_page):
     select_query = '''
-        SELECT * FROM Turmas
-        ORDER BY id
+        SELECT
+            t.turma,
+            t.periodo,
+            p.nome AS professor,
+            t.horario,
+            t.vagas_ocupadas,
+            t.total_vagas,
+            t.local,
+            t.cod_disciplina,
+            t.cod_depto,
+            d.nome AS disciplina
+        FROM Turmas t
+        JOIN Professores p ON t.professor_id = p.id
+        JOIN Disciplinas d ON t.cod_disciplina = d.codigo
+        ORDER BY t.id
         OFFSET %s LIMIT %s
     '''
     offset = (page - 1) * per_page
     with get_cursor() as cursor:
         cursor.execute(select_query, (offset, per_page))
-        classes = cursor.fetchall()
+        rows = cursor.fetchall()
+
+    classes = []
+    for row in rows:
+        classes.append({
+            'turma': row[0],
+            'periodo': row[1],
+            'professor': row[2],
+            'horario': row[3],
+            'vagas_ocupadas': row[4],
+            'total_vagas': row[5],
+            'local': row[6],
+            'cod_disciplina': row[7],
+            'cod_depto': row[8],
+            'disciplina': row[9]
+        })
 
     return classes
 

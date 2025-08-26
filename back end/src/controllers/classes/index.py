@@ -10,26 +10,23 @@ classes_blueprint = Blueprint('turmas', __name__)
 
 @classes_blueprint.route('/turmas', methods=['GET'])
 def get_classes_controller():
-    page = int(request.args.get('page', 1)) 
-    per_page = 10  
-    class_data = get_classes(page, 50)  
+    page = int(request.args.get('page', 1))
+    per_page = 10
+    class_data = get_classes(page, per_page)
     turmas = []
 
     for data in class_data:
-        disciplina_id = data[8]
-        disciplina_obj = get_disciplina_by_id(disciplina_id)
-        disciplina = disciplina_obj[1] if disciplina_obj else ''
         turma = {
-            'turma': data[1],
-            'periodo': data[2],
-            'disciplina': disciplina,
-            'professor': get_professor_by_id(data[3])[1],
-            'horario': data[4],
-            'vagas_ocupadas': data[5],
-            'total_vagas': data[6],
-            'local': data[7],
-            'cod_disciplina': data[8],
-            'cod_depto': data[9]
+            'turma': data['turma'],
+            'periodo': data['periodo'],
+            'disciplina': data['disciplina'],
+            'professor': data['professor'],
+            'horario': data['horario'],
+            'vagas_ocupadas': data['vagas_ocupadas'],
+            'total_vagas': data['total_vagas'],
+            'local': data['local'],
+            'cod_disciplina': data['cod_disciplina'],
+            'cod_depto': data['cod_depto']
         }
         turmas.append(turma)
     total_turmas = 50  
