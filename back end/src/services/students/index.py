@@ -1,27 +1,27 @@
 from flask import jsonify, session, redirect, flash
 import re
-from src.db_connection.connection import get_db_connection
+from src.db_connection.connection import get_cursor
 import base64
 from dotenv import dotenv_values
+import bcrypt
 
 env_variables = dotenv_values()
 
 def create_user(nome, email, senha, matricula, curso, foto, is_adm=False):
     if not re.match(r'^\d{9}@aluno.unb.br$', email):
         return None
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    
+    hashed_password = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     insert_query = '''
         INSERT INTO Estudantes (nome, email, senha, matricula, curso, foto, is_adm)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
         RETURNING id, nome, email, matricula, curso, is_adm
     '''
-    cursor.execute(insert_query, (nome, email, senha, matricula, curso, foto, is_adm))
-    conn.commit()
+    with get_cursor() as cursor:
+        cursor.execute(insert_query, (nome, email, hashed_password, matricula, curso, foto, is_adm))
+        user = cursor.fetchone()
 
-    user = cursor.fetchone() 
     user_dict = {
         'id': user[0],
         'nome': user[1],
@@ -32,24 +32,16 @@ def create_user(nome, email, senha, matricula, curso, foto, is_adm=False):
         'foto': base64.b64encode(foto.encode('utf-8')).decode('utf-8') if foto else None
     }
 
-    cursor.close()
-    conn.close()
-
     return user_dict
 
 
 def get_user_by_email(email):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     select_query = '''
         SELECT * FROM Estudantes WHERE email = %s
     '''
-    cursor.execute(select_query, (email,))
-    user = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
+    with get_cursor() as cursor:
+        cursor.execute(select_query, (email,))
+        user = cursor.fetchone()
 
     if user:
         user_dict = {
@@ -67,8 +59,6 @@ def get_user_by_email(email):
 
     
 def edit_user(user_id, nome=None, email=None, senha=None, curso=None, foto=None, is_adm=None):
-    conn = get_db_connection()
-    cursor = conn.cursor()
 
     update_values = []
     update_fields = []
@@ -80,8 +70,9 @@ def edit_user(user_id, nome=None, email=None, senha=None, curso=None, foto=None,
         update_fields.append('email')
         update_values.append(email)
     if senha is not None:
+        hashed_password = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         update_fields.append('senha')
-        update_values.append(senha)
+        update_values.append(hashed_password)
     if curso is not None:
         update_fields.append('curso')
         update_values.append(curso)
@@ -106,11 +97,10 @@ def edit_user(user_id, nome=None, email=None, senha=None, curso=None, foto=None,
 
     update_values.append(user_id)
 
-    cursor.execute(update_query, update_values)
-    
-    conn.commit()
+    with get_cursor() as cursor:
+        cursor.execute(update_query, update_values)
+        user = cursor.fetchone()
 
-    user = cursor.fetchone()
     user_dict = {
         'id': user[0],
         'nome': user[1],
@@ -121,20 +111,16 @@ def edit_user(user_id, nome=None, email=None, senha=None, curso=None, foto=None,
         'foto': base64.b64encode(user[5]).decode('utf-8') if user[5] else None
     }
 
-    cursor.close()
-    conn.close()
-
     return user_dict
 
 def get_users():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
+    
     select_query = '''
         SELECT id, nome, email, matricula, curso, is_adm, foto FROM Estudantes
     '''
-    cursor.execute(select_query)
-    users = cursor.fetchall()
+    with get_cursor() as cursor:
+        cursor.execute(select_query)
+        users = cursor.fetchall()
 
     user_list = []
     for user in users:
@@ -149,24 +135,17 @@ def get_users():
         }           
         user_list.append(user_dict)
 
-    cursor.close()
-    conn.close()
-
     return user_list
 
 
 def get_user_by_id(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
 
     select_query = '''
         SELECT * FROM Estudantes WHERE id = %s
     '''
-    cursor.execute(select_query, (user_id,))
-    user = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
+    with get_cursor() as cursor:
+        cursor.execute(select_query, (user_id,))
+        user = cursor.fetchone()
 
     if user:
         user_dict = {
@@ -184,17 +163,12 @@ def get_user_by_id(user_id):
 
 
 def delete_user(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
 
     delete_query = '''
         DELETE FROM Estudantes WHERE id = %s
     '''
-    cursor.execute(delete_query, (user_id,))
-    conn.commit()
-
-    cursor.close()
-    conn.close()
+    with get_cursor() as cursor:
+        cursor.execute(delete_query, (user_id,))
 
 def convert_image_to_base64(image_path):
     with open(image_path, "rb") as image_file:

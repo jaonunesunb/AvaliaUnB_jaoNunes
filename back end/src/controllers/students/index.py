@@ -1,22 +1,33 @@
 import os
-from flask import Blueprint, request, jsonify, make_response, render_template, session, flash, redirect
-from src.services.reports.index import get_denuncias_by_estudante_id
+
+from flask import (
+    Blueprint,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+)
+from werkzeug.utils import secure_filename
+
 from src.controllers.reports.index import get_all_reports
 from src.db_connection.connection import get_db_connection
+from src.middlewares.index import is_authenticated
 from src.services.avaluations.index import get_avaliacoes_by_userID
-from src.middlewares.index import check_admin, is_authenticated
-from src.services.students.index import create_user, edit_user, get_user_by_email, get_users, get_user_by_id, delete_user, convert_image_to_base64
+from src.services.reports.index import get_denuncias_by_estudante_id
+from src.services.students.index import (
+    create_user,
+    delete_user,
+    edit_user,
+    get_user_by_email,
+    get_user_by_id,
+    get_users,
+    convert_image_to_base64,
+)
+import bcrypt
 
 users_blueprint = Blueprint('users', __name__)
-
-from flask import request
-from werkzeug.utils import secure_filename
-
-import os
-from flask import Blueprint, jsonify, request, redirect
-from werkzeug.utils import secure_filename
-
-users_blueprint = Blueprint('users_blueprint', __name__)
 
 @users_blueprint.route('/users/register', methods=['POST'])
 def create_user_controller():
@@ -141,7 +152,7 @@ def login():
 
     if user:
         user_id, nome, stored_password, is_adm = user
-        if senha == stored_password:
+        if bcrypt.checkpw(senha.encode('utf-8'), stored_password.encode('utf-8')):
             session['user_id'] = user_id
             session['is_adm'] = is_adm
             session['nome'] = nome

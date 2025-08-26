@@ -1,11 +1,8 @@
 from src.services.disciplines.index import get_disciplina_by_id
 from src.services.professors.index import get_professor_by_id
-from src.db_connection.connection import get_db_connection
+from src.db_connection.connection import get_cursor
 
 def create_class(turma, periodo, professor, horario, vagas_ocupadas, total_vagas, local, cod_disciplina, cod_depto):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     professor_id = get_professor_id_by_name(professor)
     departamento_id = get_departamento_id_by_name(cod_depto)
 
@@ -14,12 +11,9 @@ def create_class(turma, periodo, professor, horario, vagas_ocupadas, total_vagas
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
     '''
-    cursor.execute(insert_query, (turma, periodo, professor_id, horario, vagas_ocupadas, total_vagas, local, cod_disciplina, departamento_id))
-    class_id = cursor.fetchone()[0]
-    conn.commit()
-
-    cursor.close()
-    conn.close()
+    with get_cursor() as cursor:
+        cursor.execute(insert_query, (turma, periodo, professor_id, horario, vagas_ocupadas, total_vagas, local, cod_disciplina, departamento_id))
+        class_id = cursor.fetchone()[0]
 
     return {
         'class_id': class_id,
@@ -35,9 +29,6 @@ def create_class(turma, periodo, professor, horario, vagas_ocupadas, total_vagas
     }
 
 def edit_class(class_id, turma=None, periodo=None, professor=None, horario=None, vagas_ocupadas=None, total_vagas=None, local=None, cod_disciplina=None, cod_depto=None):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     update_values = []
 
     if turma is not None:
@@ -72,29 +63,21 @@ def edit_class(class_id, turma=None, periodo=None, professor=None, horario=None,
     update_values.append(('class_id', class_id))
     update_values = [value for _, value in update_values]
 
-    cursor.execute(update_query, update_values)
-    conn.commit()
+    with get_cursor() as cursor:
+        cursor.execute(update_query, update_values)
 
-    cursor.close()
-    conn.close()
-
-    updated_class_data = get_class_by_id(class_id) 
+    updated_class_data = get_class_by_id(class_id)
 
     return updated_class_data
 
 
 def get_professor_id_by_name(professor_name):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     select_query = '''
         SELECT id FROM Professores WHERE nome = %s
     '''
-    cursor.execute(select_query, (professor_name,))
-    professor_id = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
+    with get_cursor() as cursor:
+        cursor.execute(select_query, (professor_name,))
+        professor_id = cursor.fetchone()
 
     if professor_id:
         return professor_id[0]
@@ -102,17 +85,12 @@ def get_professor_id_by_name(professor_name):
         return None
 
 def get_departamento_id_by_name(departamento_name):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     select_query = '''
         SELECT id FROM Departamentos WHERE nome = %s
     '''
-    cursor.execute(select_query, (departamento_name,))
-    departamento_id = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
+    with get_cursor() as cursor:
+        cursor.execute(select_query, (departamento_name,))
+        departamento_id = cursor.fetchone()
 
     if departamento_id:
         return departamento_id[0]
@@ -121,36 +99,54 @@ def get_departamento_id_by_name(departamento_name):
 
 
 def get_classes(page, per_page):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     select_query = '''
-        SELECT * FROM Turmas
-        ORDER BY id
+        SELECT
+            t.turma,
+            t.periodo,
+            p.nome AS professor,
+            t.horario,
+            t.vagas_ocupadas,
+            t.total_vagas,
+            t.local,
+            t.cod_disciplina,
+            t.cod_depto,
+            d.nome AS disciplina
+        FROM Turmas t
+        JOIN Professores p ON t.professor_id = p.id
+        JOIN Disciplinas d ON t.cod_disciplina = d.codigo
+        ORDER BY t.id
         OFFSET %s LIMIT %s
     '''
     offset = (page - 1) * per_page
-    cursor.execute(select_query, (offset, per_page))
-    classes = cursor.fetchall()
+    with get_cursor() as cursor:
+        cursor.execute(select_query, (offset, per_page))
+        rows = cursor.fetchall()
 
-    cursor.close()
-    conn.close()
+    classes = []
+    for row in rows:
+        classes.append({
+            'turma': row[0],
+            'periodo': row[1],
+            'professor': row[2],
+            'horario': row[3],
+            'vagas_ocupadas': row[4],
+            'total_vagas': row[5],
+            'local': row[6],
+            'cod_disciplina': row[7],
+            'cod_depto': row[8],
+            'disciplina': row[9]
+        })
 
     return classes
 
 
 def get_class_by_id(class_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     select_query = '''
         SELECT * FROM Turmas WHERE id = %s
     '''
-    cursor.execute(select_query, (class_id,))
-    class_data = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
+    with get_cursor() as cursor:
+        cursor.execute(select_query, (class_id,))
+        class_data = cursor.fetchone()
 
     if class_data:
         return {
@@ -170,17 +166,8 @@ def get_class_by_id(class_id):
         return None
     
 def delete_class(class_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     delete_query = '''
         DELETE FROM Turmas WHERE id = %s
     '''
-    cursor.execute(delete_query, (class_id,))
-    conn.commit()
-
-    cursor.close()
-    conn.close()
-    
-
-
+    with get_cursor() as cursor:
+        cursor.execute(delete_query, (class_id,))

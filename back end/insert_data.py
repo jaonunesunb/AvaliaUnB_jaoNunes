@@ -2,6 +2,7 @@ import csv
 import re
 from src.db_connection.connection import get_db_connection
 from src.services.students.index import convert_image_to_base64
+import bcrypt
 
 def extract_professor_name(professor):
     pattern = r"^(.*?),?\s*\d+h?$"  
@@ -167,14 +168,14 @@ def insert_students():
     for student in students_data:
         nome, email, senha, matricula, curso, foto_path, is_adm = student
 
-       
+        hashed_password = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         foto_base64 = convert_image_to_base64(foto_path)
 
         insert_query = '''
             INSERT INTO Estudantes (nome, email, senha, matricula, curso, foto, is_adm)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         '''
-        cursor.execute(insert_query, (nome, email, senha, matricula, curso, foto_base64, is_adm))
+        cursor.execute(insert_query, (nome, email, hashed_password, matricula, curso, foto_base64, is_adm))
 
     conn.commit()
     cursor.close()

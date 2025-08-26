@@ -4,42 +4,9 @@
     <title>
       AvaliaUnB
     </title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-      }
-      .navbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: #f5f5f5;
-        padding: 10px 20px;
-      }
-      .navbar ul {
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-      }
-      .navbar li {
-        display: inline-block;
-        margin-right: 10px;
-      }
-      .navbar li:last-child {
-        margin-right: 0;
-      }
-      .navbar a {
-        text-decoration: none;
-        color: #333;
-        padding: 8px;
-        border-radius: 5px;
-        background-color: #e6e6e6;
-      }
-      .navbar a:hover {
-        background-color: #d3d3d3;
-      }
-    </style>
+    <link rel="stylesheet" href="/static/css/main.css" />
   </head>
-  <body>
+  <body class="landing">
     <div class="navbar">
       <ul>
         {% if session.user_id %}
